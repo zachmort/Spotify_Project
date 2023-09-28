@@ -1,6 +1,6 @@
 plotly.express
 plotly
-base64
+# base64
 datetime
 urllib.parse
 requests

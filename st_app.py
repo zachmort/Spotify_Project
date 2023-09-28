@@ -134,7 +134,7 @@ st.image(list(most_recent_5_songs.artist_image.unique()[0:5]), caption=list(most
 
 # Plotting avg time difference to add songs
 # st.write(pd.to_datetime(df['added_to_playlist_time']).dt.strftime("%Y-%m-%d"))
-added_time = pd.to_datetime(df['added_to_playlist_time']).dt.strftime("%Y-%m-%d") 
-release_time = pd.to_datetime(df['release_date']).dt.strftime("%Y-%m-%d")
+# added_time = pd.to_datetime(df['added_to_playlist_time']).dt.strftime("%Y-%m-%d") 
+# release_time = pd.to_datetime(df['release_date']).dt.strftime("%Y-%m-%d")
 # st.write(pd.to_datetime(added_time) - pd.to_datetime(release_time))
 # st.write(pd.to_datetime(release_time))
