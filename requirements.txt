@@ -1,2 +1,9 @@
 plotly.express
 plotly
+base64
+datetime
+urllib.parse
+requests
+json
+webbrowser
+urllib

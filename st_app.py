@@ -1,13 +1,21 @@
 import streamlit as st
 import pandas as pd
-import os
 import plotly.express as px
 import plotly.graph_objects as go
-
+import requests
+import base64
+import json
+import webbrowser
+import urllib
 
 
 # SETTING PAGE CONFIG TO WIDE MODE AND ADDING A TITLE AND FAVICON
 st.set_page_config(layout="wide", page_title="Spotify Data")
+
+
+spotify_auth_button = st.button("Please Login into Your Spotify Account")
+if spotify_auth_button:
+    url= "https://accounts.spotify.com/api/token"
 
 # Loading Data
 @st.cache_data
