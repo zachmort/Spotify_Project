@@ -5,5 +5,5 @@ datetime
 # urllib.parse
 requests
 # json
-webbrowser
+# webbrowser
 urllib
