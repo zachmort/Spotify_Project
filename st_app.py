@@ -7,13 +7,48 @@ import requests
 import json
 import webbrowser
 import urllib
-
+import random
+import string
 
 # SETTING PAGE CONFIG TO WIDE MODE AND ADDING A TITLE AND FAVICON
 st.set_page_config(layout="wide", page_title="Spotify Data")
 
-url= "https://accounts.spotify.com/api/token"
-spotify_auth_button = st.link_button("Please Login into Your Spotify Account", url=url)
+
+#################################### TESTING ####################################
+# url= "https://accounts.spotify.com/api/token"
+# spotify_auth_button = st.link_button("Please Login into Your Spotify Account", url=url)
+
+CLIENT_ID = 'CLIENT_ID'
+REDIRECT_URI = 'http://localhost:8888/callback'
+
+def generate_random_string(length):
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(length))
+
+def authenticate():
+    state = generate_random_string(16)
+    scope = 'user-read-private user-read-email'
+
+    params = {
+        'response_type': 'code',
+        'client_id': CLIENT_ID,
+        'scope': scope,
+        'redirect_uri': REDIRECT_URI,
+        'state': state
+    }
+
+    url = 'https://accounts.spotify.com/authorize?' + urllib.parse.urlencode(params)
+
+    if st.button('Login with Spotify'):
+        webbrowser.open_new_tab(url)
+
+st.title('Spotify User Authentication')
+authenticate()
+
+########################################################################
+########################################################################
+########################################################################
+
 
 
 # Loading Data
