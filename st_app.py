@@ -33,7 +33,7 @@ col2.metric("Total Distinct Artists", f"{distinct_artist_count}")
 col3.metric("Total Songs", f"{total_songs}")
 
 # song explicit % of all songs with a true and false banner with %s below each
-df_explicit = ((df.groupby(['song_explicit'], ).count()/len(df))*100).reset_index()
+df_explicit = ((df.groupby(['song_explicit']).count()/len(df))*100).reset_index()
 df_explicit = df_explicit.rename(columns={'added_to_playlist_time':'explicit_%'})
 df_explicit['explicit_%'] = round(df_explicit['explicit_%'], 1)
 st.write(df_explicit.loc[:, ['song_explicit', 'explicit_%']])
