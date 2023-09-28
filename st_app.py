@@ -33,7 +33,7 @@ col2.metric("Total Distinct Artists", f"{distinct_artist_count}")
 col3.metric("Total Songs", f"{total_songs}")
 
 # song explicit % of all songs with a true and false banner with %s below each
-df_explicit = ((df.groupby(['song_explicit']).count()/len(df))*100).reset_index()
+df_explicit = ((df.groupby(['song_explicit'], ).count()/len(df))*100).reset_index()
 df_explicit = df_explicit.rename(columns={'added_to_playlist_time':'explicit_%'})
 df_explicit['explicit_%'] = round(df_explicit['explicit_%'], 1)
 st.write(df_explicit.loc[:, ['song_explicit', 'explicit_%']])
@@ -87,9 +87,9 @@ with st.form("radar_entry_form", clear_on_submit=False):
         artist_chosen = str(st.session_state["artist_name_radar"])
         st.write(f"A Radar plot of {artist_chosen}'s songs VS the avg of all songs in my liked songs")
         data_filtered_artist = df[df["artist_name"]== str(artist_chosen)]
-        data_filtered_artist_agg = data_filtered_artist.groupby(["artist_name", "unique_artist_id"]).mean().reset_index()
+        data_filtered_artist_agg = data_filtered_artist.groupby(["artist_name", "unique_artist_id"]).mean(numeric_only=True).reset_index()
         df["temp"] = "tempval"
-        data_agg = df.groupby(["temp"]).mean().reset_index()
+        data_agg = df.groupby(["temp"]).mean(numeric_only=True).reset_index()
         data_agg_final = data_agg[['danceability', 'energy', 'speechiness','acousticness', 'instrumentalness', 'liveness', 'valence']]
         data_filtered_artist_agg_final = data_filtered_artist_agg[['danceability', 'energy', 'speechiness','acousticness', 'instrumentalness', 'liveness', 'valence']]
         fig = go.Figure()
