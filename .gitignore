@@ -1,3 +1,8 @@
+# Data Files
+song_data.csv
+test_2.py
+test_temp.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
