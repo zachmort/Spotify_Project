@@ -2,8 +2,8 @@ plotly.express
 plotly
 # base64
 datetime
-urllib.parse
+# urllib.parse
 requests
-json
+# json
 webbrowser
 urllib
