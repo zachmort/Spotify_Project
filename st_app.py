@@ -19,7 +19,7 @@ st.set_page_config(layout="wide", page_title="Spotify Data")
 # spotify_auth_button = st.link_button("Please Login into Your Spotify Account", url=url)
 
 CLIENT_ID = 'CLIENT_ID'
-REDIRECT_URI = 'http://localhost:8888/callback'
+REDIRECT_URI = 'https://zachmort-spotify-project-st-app-pzwhvi.streamlit.app/'
 
 def generate_random_string(length):
     letters = string.ascii_lowercase
@@ -42,7 +42,7 @@ def authenticate():
     if st.button('Login with Spotify'):
         webbrowser.open_new_tab(url)
 
-st.title('Spotify User Authentication')
+# st.title('Spotify User Authentication')
 authenticate()
 
 ########################################################################
