@@ -59,7 +59,7 @@ def app_display_welcome():
     client_secret = st.secrets["client_secret"]
     uri = st.secrets["uri"]
     # set scope and establish connection
-    scopes = " ".join(["user-read-private"])
+    scopes = " ".join(["user-read-private",'user-library-read', 'user-top-read'])
     # create oauth object
     oauth = SpotifyOAuth(scope=scopes,redirect_uri=uri,client_id=client_id,client_secret=client_secret)
     # store oauth in session
@@ -117,7 +117,13 @@ if st.session_state["signed_in"]:
     suc.empty()
     sp=spotipy.Spotify(token)
     user= sp.current_user()
-    st.write(user["display_name"])
+    st.write(user["display_name"])]
+    top_user_artrists = sp.current_user_top_artists()
+    top_user_tracks = sp.current_user_top_tracks()
+    st.write(top_user_artrists)
+
+
+
 
 ########################################################################
 ########################################################################
