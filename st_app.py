@@ -9,41 +9,126 @@ import webbrowser
 import urllib
 import random
 import string
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials
+import os
 
 # SETTING PAGE CONFIG TO WIDE MODE AND ADDING A TITLE AND FAVICON
 st.set_page_config(layout="wide", page_title="Spotify Data")
 
-
+st.title("My Spotify Saved Songs Web App!")
 #################################### TESTING ####################################
-# url= "https://accounts.spotify.com/api/token"
-# spotify_auth_button = st.link_button("Please Login into Your Spotify Account", url=url)
+# if st.button('Login with Spotify')==True:
 
-CLIENT_ID = 'CLIENT_ID'
-REDIRECT_URI = 'https://zachmort-spotify-project-st-app-pzwhvi.streamlit.app/'
+def get_token(oauth, code):
+    try:
+        token = oauth.get_access_token(code, as_dict=False, check_cache=False)
+        # remove cached token saved in directory
+        # st.write(token)
+        # os.remove(".cache")
+        # return the token
+        return token
+    except Exception as notoken:
+        st.error("token not here?")
+        st.write(notoken)
 
-def generate_random_string(length):
-    letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for i in range(length))
+def sign_in(token):
+    sp = spotipy.Spotify(auth=token)
+    # st.write("at this step in sign_in function")
+    # st.write(token)
+    return sp
 
-def authenticate():
-    state = generate_random_string(16)
-    scope = 'user-read-private user-read-email'
+def app_get_token():
+    try:
+        token = get_token(st.session_state["oauth"], st.session_state["code"])
+    except Exception as e:
+        st.error("An error occurred during token retrieval!")
+        st.write("The error is as follows:")
+        st.write(e)
+    else:
+        st.session_state["cached_token"] = token
+    return token
+        
 
-    params = {
-        'response_type': 'code',
-        'client_id': CLIENT_ID,
-        'scope': scope,
-        'redirect_uri': REDIRECT_URI,
-        'state': state
-    }
+def app_sign_in():
+    try:
+        sp = sign_in(st.session_state["cached_token"])
+    except Exception as e:
+        st.error("An error occurred during sign-in!")
+        st.write("The error is as follows:")
+        st.write(e)
+    else:
+        st.session_state["signed_in"] = True
+        app_display_welcome()
+        st.success("Sign in success!")
+                
+    return sp
 
-    url = 'https://accounts.spotify.com/authorize?' + urllib.parse.urlencode(params)
+def app_display_welcome():
+    # import secrets from streamlit deployment
+    # cid = st.secrets["SPOTIPY_CLIENT_ID"]
+    # csecret = st.secrets["SPOTIPY_CLIENT_SECRET"]
+    # uri = st.secrets["SPOTIPY_REDIRECT_URI"]
+    # REDIRECT_URI = "https://zachmort-spotify-project-st-app-pzwhvi.streamlit.app/"
+    client_id = "1a03d057b2754e71a51fb53f7ea86a89"
+    client_secret = "9b1f0ae736664c919cba26298dba45dc"
+    uri = "http://localhost:8501/"
+    # set scope and establish connection
+    scopes = " ".join(["user-read-private"])
+    # create oauth object
+    oauth = SpotifyOAuth(scope=scopes,redirect_uri=uri,client_id=client_id,client_secret=client_secret)
+    # store oauth in session
+    st.session_state["oauth"] = oauth
+    # retrieve auth url
+    auth_url = oauth.get_authorize_url()
+    # this SHOULD open the link in the same tab when Streamlit Cloud is updated
+    # via the "_self" target
+    link_html = " <a target=\"_self\" href=\"{url}\" >{msg}</a> ".format(url=auth_url,msg="Click me to authenticate!")
+    # st.write("i am here")
+    # st.write(auth_url)
+    # st.write(oauth)
+    if not st.session_state["signed_in"]:
+        st.write(" ".join(["No tokens found for this session. Please log in by",
+                        "clicking the link below."]))
+        st.markdown(link_html, unsafe_allow_html=True)
 
-    if st.button('Login with Spotify'):
-        webbrowser.open_new_tab(url)
 
-# st.title('Spotify User Authentication')
-authenticate()
+if "signed_in" not in st.session_state:
+    st.session_state["signed_in"] = False
+if "cached_token" not in st.session_state:
+    st.session_state["cached_token"] = ""
+if "code" not in st.session_state:
+    st.session_state["code"] = ""
+if "oauth" not in st.session_state:
+    st.session_state["oauth"] = None
+
+
+# get current url (stored as dict)
+url_params = st.experimental_get_query_params()
+
+# attempt sign in with cached token
+if st.session_state["cached_token"] != "":
+    sp = app_sign_in()
+    st.write("current state")
+# if no token, but code in url, get code, parse token, and sign in
+elif "code" in url_params:
+    st.write("current state now")
+    # all params stored as lists, see doc for explanation
+    st.session_state["code"] = url_params["code"][0]
+    # st.write(st.session_state["code"])
+    sp = app_sign_in()
+    token=app_get_token()
+    # st.write(token)
+else:
+    app_display_welcome()
+
+if st.session_state["signed_in"]:
+    st.write("user signed in")
+    # st.write(token)
+    # st.write(st.session_state["code"])
+    sp=spotipy.Spotify(token)
+    user= sp.current_user()
+    st.write(user)
 
 ########################################################################
 ########################################################################
@@ -52,123 +137,123 @@ authenticate()
 
 
 # Loading Data
-@st.cache_data
-def load_data(path: str):
-    data = pd.read_csv(path)
-    return data
+# @st.cache_data
+# def load_data(path: str):
+#     data = pd.read_csv(path)
+#     return data
 
-df=load_data("song_data.csv")
-df2 = df.copy()
-df2.columns = df2.columns.str.replace('_', ' ')
-df2.columns = df2.columns.str.capitalize()
+# df=load_data("song_data.csv")
+# df2 = df.copy()
+# df2.columns = df2.columns.str.replace('_', ' ')
+# df2.columns = df2.columns.str.capitalize()
 
-# Plotting Ttile Text on page
-st.title("My Spotify Saved Songs Web App!")
+# # Plotting Ttile Text on page
+# # st.title("My Spotify Saved Songs Web App!")
 
-# Summary Stats
-total_playlist_length_hours = round((df["song_length_seconds"].sum())/(1000),1) 
-distinct_artist_count = len(df['unique_artist_id'].unique())
-total_songs = len(df)
-col1, col2, col3 = st.columns(3)
-col1.metric("Playlist Length (hours)", f"{total_playlist_length_hours}")
-col2.metric("Total Distinct Artists", f"{distinct_artist_count}")
-col3.metric("Total Songs", f"{total_songs}")
+# # Summary Stats
+# total_playlist_length_hours = round((df["song_length_seconds"].sum())/(1000),1) 
+# distinct_artist_count = len(df['unique_artist_id'].unique())
+# total_songs = len(df)
+# col1, col2, col3 = st.columns(3)
+# col1.metric("Playlist Length (hours)", f"{total_playlist_length_hours}")
+# col2.metric("Total Distinct Artists", f"{distinct_artist_count}")
+# col3.metric("Total Songs", f"{total_songs}")
 
-# song explicit % of all songs with a true and false banner with %s below each
-df_explicit = ((df.groupby(['song_explicit']).count()/len(df))*100).reset_index()
-df_explicit = df_explicit.rename(columns={'added_to_playlist_time':'explicit_%'})
-df_explicit['explicit_%'] = round(df_explicit['explicit_%'], 1)
-st.write(df_explicit.loc[:, ['song_explicit', 'explicit_%']])
-bar_chart_explicit= px.bar(data_frame=df_explicit, x='song_explicit', y='explicit_%', template="ggplot2")
-st.plotly_chart(bar_chart_explicit)
-# st.bar_chart(data=df_explicit, x='song_explicit', y='explicit_%')
-
-
-# Plotting Data frame on Page
-#TODO: add a multiselect to allow users to change data views
-st.dataframe(df2)
+# # song explicit % of all songs with a true and false banner with %s below each
+# df_explicit = ((df.groupby(['song_explicit']).count()/len(df))*100).reset_index()
+# df_explicit = df_explicit.rename(columns={'added_to_playlist_time':'explicit_%'})
+# df_explicit['explicit_%'] = round(df_explicit['explicit_%'], 1)
+# st.write(df_explicit.loc[:, ['song_explicit', 'explicit_%']])
+# bar_chart_explicit= px.bar(data_frame=df_explicit, x='song_explicit', y='explicit_%', template="ggplot2")
+# st.plotly_chart(bar_chart_explicit)
+# # st.bar_chart(data=df_explicit, x='song_explicit', y='explicit_%')
 
 
-### Creating Artist Form for scatter plot data
-st.write("## Artist Choser Form")
-with st.form("entry_form", clear_on_submit=False):
-    col_artist_dropdown, col_numeric_data_1, col_numeric_data_2 = st.columns(3)
-    list_distinct_artists = df["artist_name"].unique()
-    datacols = df.loc[ :,'danceability':]
-    datacols['song_popularity'] = df['song_popularity']
-    col_artist_dropdown.selectbox('Select Artist', list_distinct_artists, key="artist_name")
-    col_numeric_data_1.selectbox('Select Data Column for X Axis', datacols.columns, key="datapoint1")
-    col_numeric_data_2.selectbox('Select Data Column for Y Axis', datacols.columns, key="datapoint2")
-    submitted = st.form_submit_button("Select Artist")
-    if submitted:
-        artist_chosen = str(st.session_state["artist_name"])
-        data_col_1_chosen = str(st.session_state["datapoint1"])
-        data_col_2_chosen = str(st.session_state["datapoint2"])
-        st.write(f"A scatter plot of my saved {artist_chosen} songs {data_col_1_chosen} and {data_col_2_chosen}!")
-        data_filtered_artist = df[df["artist_name"]== str(artist_chosen)]
-        histogram_fig = px.scatter(data_frame=data_filtered_artist, x=data_col_1_chosen
-                                                , y=data_col_2_chosen
-                                                , color=data_filtered_artist['album_name']
-                                                , labels=dict(x=data_col_1_chosen, y=data_col_2_chosen))
-        histogram_fig.update_layout(height=650,width=1000, showlegend=False)
-        st.plotly_chart(histogram_fig,height=650, width=1000)
-        # st.plotly_chart(histogram_fig)
+# # Plotting Data frame on Page
+# #TODO: add a multiselect to allow users to change data views
+# st.dataframe(df2)
 
 
-### Creating Artist Form for Radar Plot data
-st.write("## Artist Radar Plot Form")
-with st.form("radar_entry_form", clear_on_submit=False):
-    # TODO: #Create a form drop down that allow susers to select given artists and then plot scatter plots with color as album name
-    col_artist_dropdown_radar= st.columns(1)
-    list_distinct_artists = df["artist_name"].unique()
-    datacols = df.loc[ :,'danceability':]
-    datacols['song_popularity'] = df['song_popularity']
-    st.selectbox('Select Artist', list_distinct_artists, key="artist_name_radar")
-    submitted_radar = st.form_submit_button("Select Artist")
-    if submitted_radar:
-        artist_chosen = str(st.session_state["artist_name_radar"])
-        st.write(f"A Radar plot of {artist_chosen}'s songs VS the avg of all songs in my liked songs")
-        data_filtered_artist = df[df["artist_name"]== str(artist_chosen)]
-        data_filtered_artist_agg = data_filtered_artist.groupby(["artist_name", "unique_artist_id"]).mean(numeric_only=True).reset_index()
-        df["temp"] = "tempval"
-        data_agg = df.groupby(["temp"]).mean(numeric_only=True).reset_index()
-        data_agg_final = data_agg[['danceability', 'energy', 'speechiness','acousticness', 'instrumentalness', 'liveness', 'valence']]
-        data_filtered_artist_agg_final = data_filtered_artist_agg[['danceability', 'energy', 'speechiness','acousticness', 'instrumentalness', 'liveness', 'valence']]
-        fig = go.Figure()
-        fig.add_trace(go.Scatterpolar(
-            r=(data_filtered_artist_agg_final.values).flatten()
-            , theta=list(data_filtered_artist_agg_final.columns)
-            , fill="toself"
-            , name=f'Avg {artist_chosen} Song Metrics'
-            , marker = {'color' : 'red'}
-        ))
-        fig.add_trace(go.Scatterpolar(
-            r=(data_agg_final.values).flatten()
-            , theta=list(data_agg_final.columns)
-            , fill="toself"
-            , name='Avg Song Metrics'
-            , marker = {'color' : 'blue'}
-        ))
-        fig.update_layout(
-        polar=dict(
-            radialaxis=dict(
-            visible=True,
-            range=[0, 1]
-            )),
-        showlegend=True)
-        fig.update_layout(height=650,width=1500, showlegend=True)
-        st.plotly_chart(fig,height=650, width=1000)
+# ### Creating Artist Form for scatter plot data
+# st.write("## Artist Choser Form")
+# with st.form("entry_form", clear_on_submit=False):
+#     col_artist_dropdown, col_numeric_data_1, col_numeric_data_2 = st.columns(3)
+#     list_distinct_artists = df["artist_name"].unique()
+#     datacols = df.loc[ :,'danceability':]
+#     datacols['song_popularity'] = df['song_popularity']
+#     col_artist_dropdown.selectbox('Select Artist', list_distinct_artists, key="artist_name")
+#     col_numeric_data_1.selectbox('Select Data Column for X Axis', datacols.columns, key="datapoint1")
+#     col_numeric_data_2.selectbox('Select Data Column for Y Axis', datacols.columns, key="datapoint2")
+#     submitted = st.form_submit_button("Select Artist")
+#     if submitted:
+#         artist_chosen = str(st.session_state["artist_name"])
+#         data_col_1_chosen = str(st.session_state["datapoint1"])
+#         data_col_2_chosen = str(st.session_state["datapoint2"])
+#         st.write(f"A scatter plot of my saved {artist_chosen} songs {data_col_1_chosen} and {data_col_2_chosen}!")
+#         data_filtered_artist = df[df["artist_name"]== str(artist_chosen)]
+#         histogram_fig = px.scatter(data_frame=data_filtered_artist, x=data_col_1_chosen
+#                                                 , y=data_col_2_chosen
+#                                                 , color=data_filtered_artist['album_name']
+#                                                 , labels=dict(x=data_col_1_chosen, y=data_col_2_chosen))
+#         histogram_fig.update_layout(height=650,width=1000, showlegend=False)
+#         st.plotly_chart(histogram_fig,height=650, width=1000)
+#         # st.plotly_chart(histogram_fig)
 
 
-#Plotting most recent artists on page
-st.write("## Most Recently Added Artists!")
-most_recent_5_songs = df.loc[:50,['artist_name','artist_image']]
-st.image(list(most_recent_5_songs.artist_image.unique()[0:5]), caption=list(most_recent_5_songs.artist_name.unique()[0:5]))
+# ### Creating Artist Form for Radar Plot data
+# st.write("## Artist Radar Plot Form")
+# with st.form("radar_entry_form", clear_on_submit=False):
+#     # TODO: #Create a form drop down that allow susers to select given artists and then plot scatter plots with color as album name
+#     col_artist_dropdown_radar= st.columns(1)
+#     list_distinct_artists = df["artist_name"].unique()
+#     datacols = df.loc[ :,'danceability':]
+#     datacols['song_popularity'] = df['song_popularity']
+#     st.selectbox('Select Artist', list_distinct_artists, key="artist_name_radar")
+#     submitted_radar = st.form_submit_button("Select Artist")
+#     if submitted_radar:
+#         artist_chosen = str(st.session_state["artist_name_radar"])
+#         st.write(f"A Radar plot of {artist_chosen}'s songs VS the avg of all songs in my liked songs")
+#         data_filtered_artist = df[df["artist_name"]== str(artist_chosen)]
+#         data_filtered_artist_agg = data_filtered_artist.groupby(["artist_name", "unique_artist_id"]).mean(numeric_only=True).reset_index()
+#         df["temp"] = "tempval"
+#         data_agg = df.groupby(["temp"]).mean(numeric_only=True).reset_index()
+#         data_agg_final = data_agg[['danceability', 'energy', 'speechiness','acousticness', 'instrumentalness', 'liveness', 'valence']]
+#         data_filtered_artist_agg_final = data_filtered_artist_agg[['danceability', 'energy', 'speechiness','acousticness', 'instrumentalness', 'liveness', 'valence']]
+#         fig = go.Figure()
+#         fig.add_trace(go.Scatterpolar(
+#             r=(data_filtered_artist_agg_final.values).flatten()
+#             , theta=list(data_filtered_artist_agg_final.columns)
+#             , fill="toself"
+#             , name=f'Avg {artist_chosen} Song Metrics'
+#             , marker = {'color' : 'red'}
+#         ))
+#         fig.add_trace(go.Scatterpolar(
+#             r=(data_agg_final.values).flatten()
+#             , theta=list(data_agg_final.columns)
+#             , fill="toself"
+#             , name='Avg Song Metrics'
+#             , marker = {'color' : 'blue'}
+#         ))
+#         fig.update_layout(
+#         polar=dict(
+#             radialaxis=dict(
+#             visible=True,
+#             range=[0, 1]
+#             )),
+#         showlegend=True)
+#         fig.update_layout(height=650,width=1500, showlegend=True)
+#         st.plotly_chart(fig,height=650, width=1000)
 
 
-# Plotting avg time difference to add songs
-# st.write(pd.to_datetime(df['added_to_playlist_time']).dt.strftime("%Y-%m-%d"))
-# added_time = pd.to_datetime(df['added_to_playlist_time']).dt.strftime("%Y-%m-%d") 
-# release_time = pd.to_datetime(df['release_date']).dt.strftime("%Y-%m-%d")
-# st.write(pd.to_datetime(added_time) - pd.to_datetime(release_time))
-# st.write(pd.to_datetime(release_time))
+# #Plotting most recent artists on page
+# st.write("## Most Recently Added Artists!")
+# most_recent_5_songs = df.loc[:50,['artist_name','artist_image']]
+# st.image(list(most_recent_5_songs.artist_image.unique()[0:5]), caption=list(most_recent_5_songs.artist_name.unique()[0:5]))
+
+
+# # Plotting avg time difference to add songs
+# # st.write(pd.to_datetime(df['added_to_playlist_time']).dt.strftime("%Y-%m-%d"))
+# # added_time = pd.to_datetime(df['added_to_playlist_time']).dt.strftime("%Y-%m-%d") 
+# # release_time = pd.to_datetime(df['release_date']).dt.strftime("%Y-%m-%d")
+# # st.write(pd.to_datetime(added_time) - pd.to_datetime(release_time))
+# # st.write(pd.to_datetime(release_time))
