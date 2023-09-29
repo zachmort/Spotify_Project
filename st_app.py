@@ -50,7 +50,6 @@ def app_sign_in():
     else:
         st.session_state["signed_in"] = True
         app_display_welcome()
-        suc = st.success("Sign in success!")
 
     return sp
 
@@ -103,6 +102,7 @@ else:
     app_display_welcome()
 
 if st.session_state["signed_in"]:
+    suc = st.success("Sign in success!")
     time.sleep(2)
     suc.empty()
     sp=spotipy.Spotify(token)
