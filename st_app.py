@@ -3,15 +3,8 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import requests
-# import base64
-import json
-import webbrowser
-import urllib
-import random
-import string
 import spotipy
-from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials
-import os
+from spotipy.oauth2 import SpotifyOAuth
 
 # SETTING PAGE CONFIG TO WIDE MODE AND ADDING A TITLE AND FAVICON
 st.set_page_config(layout="wide", page_title="Spotify Data")
