@@ -6,6 +6,7 @@ import requests
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import time
+from streamlit.components.v1 import html
 
 # SETTING PAGE CONFIG TO WIDE MODE AND ADDING A TITLE AND FAVICON
 st.set_page_config(layout="wide", page_title="Spotify Data")
@@ -70,8 +71,18 @@ def app_display_welcome():
     if not st.session_state["signed_in"]:
         st.write(" ".join(["No tokens found for this session. Please log in by",
                             "clicking the link below."]))
-        if st.button('Login with Spotify')==True:
-            st.markdown(link_html, unsafe_allow_html=True)
+
+        def open_page(url):
+            open_script= """
+                <script type="text/javascript">
+                    window.open('%s', '_blank').focus();
+                </script>
+            """ % (url)
+            html(open_script)
+
+        st.button('Open link', on_click=open_page, args=(link_html,))
+        # if st.button('Login with Spotify')==True:
+            # st.markdown(link_html, unsafe_allow_html=True)
 
 
 if "signed_in" not in st.session_state:
