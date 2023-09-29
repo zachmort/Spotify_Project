@@ -71,18 +71,17 @@ def app_display_welcome():
     if not st.session_state["signed_in"]:
         st.write(" ".join(["No tokens found for this session. Please log in by",
                             "clicking the link below."]))
+        if st.button('Login with Spotify')==True:
+            st.markdown(link_html, unsafe_allow_html=True)
+        # def open_page(url):
+        #     open_script= """
+        #         <script type="text/javascript">
+        #             window.open('%s', '_blank').focus();
+        #         </script>
+        #     """ % (url)
+        #     html(open_script)
 
-        def open_page(url):
-            open_script= """
-                <script type="text/javascript">
-                    window.open('%s', '_blank').focus();
-                </script>
-            """ % (url)
-            html(open_script)
-
-        st.button('Open link', on_click=open_page, args=(link_html,))
-        # if st.button('Login with Spotify')==True:
-            # st.markdown(link_html, unsafe_allow_html=True)
+        # st.button('Open link', on_click=open_page, args=(link_html,))
 
 
 if "signed_in" not in st.session_state:
