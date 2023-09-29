@@ -12,7 +12,6 @@ st.set_page_config(layout="wide", page_title="Spotify Data")
 
 st.title("My Spotify Saved Songs Web App!")
 #################################### TESTING ####################################
-# if st.button('Login with Spotify')==True:
 
 def get_token(oauth, code):
     try:
@@ -69,9 +68,10 @@ def app_display_welcome():
     # this SHOULD open the link in the same tab when Streamlit Cloud is updated via the "_self" target
     link_html = " <a target=\"_self\" href=\"{url}\" >{msg}</a> ".format(url=auth_url,msg="Click me to authenticate!")
     if not st.session_state["signed_in"]:
-        st.write(" ".join(["No tokens found for this session. Please log in by",
-                        "clicking the link below."]))
-        st.markdown(link_html, unsafe_allow_html=True)
+        if st.button('Login with Spotify')==True:
+            st.write(" ".join(["No tokens found for this session. Please log in by",
+                            "clicking the link below."]))
+            st.markdown(link_html, unsafe_allow_html=True)
 
 
 if "signed_in" not in st.session_state:
