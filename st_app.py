@@ -107,7 +107,7 @@ if st.session_state["signed_in"]:
     suc.empty()
     sp=spotipy.Spotify(token)
     user= sp.current_user()
-    st.write(user)
+    st.write(user["display_name"])
 
 ########################################################################
 ########################################################################
