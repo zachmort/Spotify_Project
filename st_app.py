@@ -66,13 +66,9 @@ def app_sign_in():
 
 def app_display_welcome():
     # import secrets from streamlit deployment
-    # cid = st.secrets["SPOTIPY_CLIENT_ID"]
-    # csecret = st.secrets["SPOTIPY_CLIENT_SECRET"]
-    # uri = st.secrets["SPOTIPY_REDIRECT_URI"]
-    # REDIRECT_URI = "https://zachmort-spotify-project-st-app-pzwhvi.streamlit.app/"
-    client_id = "1a03d057b2754e71a51fb53f7ea86a89"
-    client_secret = "9b1f0ae736664c919cba26298dba45dc"
-    uri = "http://localhost:8501/"
+    client_id = st.secrets["client_id"]
+    client_secret = st.secrets["client_secret"]
+    uri = st.secrets["uri"]
     # set scope and establish connection
     scopes = " ".join(["user-read-private"])
     # create oauth object
