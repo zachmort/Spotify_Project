@@ -51,7 +51,6 @@ def app_sign_in():
         st.session_state["signed_in"] = True
         app_display_welcome()
         suc = st.success("Sign in success!")
-        st.write(suc)
 
     return sp
 
