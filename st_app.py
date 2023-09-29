@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import requests
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+import time
 
 # SETTING PAGE CONFIG TO WIDE MODE AND ADDING A TITLE AND FAVICON
 st.set_page_config(layout="wide", page_title="Spotify Data")
@@ -16,8 +17,6 @@ st.title("My Spotify Saved Songs Web App!")
 def get_token(oauth, code):
     try:
         token = oauth.get_access_token(code, as_dict=False, check_cache=False)
-        # remove cached token saved in directory
-        # st.write(token)
         # os.remove(".cache")
         # return the token
         return token
@@ -27,8 +26,6 @@ def get_token(oauth, code):
 
 def sign_in(token):
     sp = spotipy.Spotify(auth=token)
-    # st.write("at this step in sign_in function")
-    # st.write(token)
     return sp
 
 def app_get_token():
@@ -53,8 +50,11 @@ def app_sign_in():
     else:
         st.session_state["signed_in"] = True
         app_display_welcome()
-        st.success("Sign in success!")
-                
+        suc = st.success("Sign in success!")
+        st.write(suc)
+        time.sleep(2)
+        suc.empty()
+
     return sp
 
 def app_display_welcome():
@@ -70,12 +70,8 @@ def app_display_welcome():
     st.session_state["oauth"] = oauth
     # retrieve auth url
     auth_url = oauth.get_authorize_url()
-    # this SHOULD open the link in the same tab when Streamlit Cloud is updated
-    # via the "_self" target
+    # this SHOULD open the link in the same tab when Streamlit Cloud is updated via the "_self" target
     link_html = " <a target=\"_self\" href=\"{url}\" >{msg}</a> ".format(url=auth_url,msg="Click me to authenticate!")
-    # st.write("i am here")
-    # st.write(auth_url)
-    # st.write(oauth)
     if not st.session_state["signed_in"]:
         st.write(" ".join(["No tokens found for this session. Please log in by",
                         "clicking the link below."]))
@@ -101,20 +97,15 @@ if st.session_state["cached_token"] != "":
     st.write("current state")
 # if no token, but code in url, get code, parse token, and sign in
 elif "code" in url_params:
-    st.write("current state now")
     # all params stored as lists, see doc for explanation
     st.session_state["code"] = url_params["code"][0]
-    # st.write(st.session_state["code"])
     sp = app_sign_in()
     token=app_get_token()
-    # st.write(token)
+
 else:
     app_display_welcome()
 
 if st.session_state["signed_in"]:
-    st.write("user signed in")
-    # st.write(token)
-    # st.write(st.session_state["code"])
     sp=spotipy.Spotify(token)
     user= sp.current_user()
     st.write(user)
