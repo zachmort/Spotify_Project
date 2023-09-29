@@ -68,10 +68,22 @@ def app_display_welcome():
     # this SHOULD open the link in the same tab when Streamlit Cloud is updated via the "_self" target
     link_html = " <a target=\"_self\" href=\"{url}\" >{msg}</a> ".format(url=auth_url,msg="Click me to authenticate!")
     if not st.session_state["signed_in"]:
-        if st.button('Login with Spotify')==True:
-            st.write(" ".join(["No tokens found for this session. Please log in by",
+        st.write(" ".join(["No tokens found for this session. Please log in by",
                             "clicking the link below."]))
-            st.markdown(link_html, unsafe_allow_html=True)
+        if st.button('Login with Spotify')==True:
+                st.markdown(
+                    f"""
+                    <a href="{link_html}" target="_self"><div style="
+                            display: inline-block;
+                            padding: 0.5em 1em;
+                            color: #FFFFFF;
+                            background-color: "#FD504D" ;
+                            border-radius: 3px;
+                            text-decoration: none;">
+                            "Log In with Spotify"</div></a>
+                    """,    unsafe_allow_html=True
+                    )
+            # st.markdown(link_html, unsafe_allow_html=True)
 
 
 if "signed_in" not in st.session_state:
