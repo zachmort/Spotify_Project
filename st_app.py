@@ -71,19 +71,7 @@ def app_display_welcome():
         st.write(" ".join(["No tokens found for this session. Please log in by",
                             "clicking the link below."]))
         if st.button('Login with Spotify')==True:
-                st.markdown(
-                    f"""
-                    <a href="{link_html}" target="_self"><div style="
-                            display: inline-block;
-                            padding: 0.5em 1em;
-                            color: #FFFFFF;
-                            background-color: "#FD504D" ;
-                            border-radius: 3px;
-                            text-decoration: none;">
-                            "Log In with Spotify"</div></a>
-                    """,    unsafe_allow_html=True
-                    )
-            # st.markdown(link_html, unsafe_allow_html=True)
+            st.markdown(link_html, unsafe_allow_html=True)
 
 
 if "signed_in" not in st.session_state:
