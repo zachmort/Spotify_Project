@@ -1,7 +1,6 @@
 plotly.express
 plotly
 spotipy
-spotipy.oauth2
 datetime
 requests
 
