@@ -61,12 +61,12 @@ def app_sign_in():
 
 def app_display_welcome():
     # import secrets from streamlit deployment
-    client_id = st.secrets["client_id"]
-    client_secret = st.secrets["client_secret"]
-    uri = st.secrets["uri"]
-    # uri = "http://localhost:8501/"
-    # client_id = "1a03d057b2754e71a51fb53f7ea86a89"
-    # client_secret = "2653ca7cb78b4ddba5bdaa34a4b136d3"
+    # client_id = st.secrets["client_id"]
+    # client_secret = st.secrets["client_secret"]
+    # uri = st.secrets["uri"]
+    uri = "http://localhost:8501/"
+    client_id = "1a03d057b2754e71a51fb53f7ea86a89"
+    client_secret = "2653ca7cb78b4ddba5bdaa34a4b136d3"
     # set scope and establish connection
     scopes = " ".join(["user-read-private",'user-library-read', 'user-top-read'])
     # create oauth object
@@ -138,14 +138,11 @@ if st.session_state["signed_in"]:
     top_user_artrists_long = sp.current_user_top_artists(limit=50, offset=0, time_range="long_term")
     top_user_artrists_short = sp.current_user_top_artists(limit=50, offset=0, time_range="short_term")
     top_user_tracks = sp.current_user_top_tracks(limit=50, offset=0, time_range="long_term")
-    # for i in top_user_artrists['items']:
-    #     st.write(i["genres"])
-    #     st.write(i["name"])
-    results_top_user_items_short_dict = {i["name"]:[i["genres"]] for i in top_user_artrists_short['items']}
-    # top_user_tracks_dict = [i["name"]:i["genres"] for i in top_user_tracks['items']]
+
+    results_top_user_items_short_dict = {i["name"]:i["genres"] for i in top_user_artrists_short['items']}
     results_top_user_items_long_dict = {i["name"]:i["genres"] for i in top_user_artrists_long['items']}
-    def genre_metrics(dictionary):
-        genre_sublists = dictionary.values()
+    def genre_metrics(given_dict):
+        genre_sublists = given_dict.values()
         genre_list = [genre for sublist in genre_sublists for genre in sublist]
         # distinct_genres = len(set(genre_list))
         total_genres = len(genre_list)
@@ -186,7 +183,7 @@ if st.session_state["signed_in"]:
     ),row = 1, col = 2)
 
     fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
-    fig.show()
+    st.plotly_chart(fig)
 
 
 
