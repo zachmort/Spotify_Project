@@ -61,9 +61,9 @@ def app_sign_in():
 
 def app_display_welcome():
     # import secrets from streamlit deployment
-    # client_id = st.secrets["client_id"]
-    # client_secret = st.secrets["client_secret"]
-    # uri = st.secrets["uri"]
+    client_id = st.secrets["client_id"]
+    client_secret = st.secrets["client_secret"]
+    uri = st.secrets["uri"]
     # uri = "http://localhost:8501/"
     # client_id = "1a03d057b2754e71a51fb53f7ea86a89"
     # client_secret = "2653ca7cb78b4ddba5bdaa34a4b136d3"
