@@ -147,7 +147,7 @@ if st.session_state["signed_in"]:
     def genre_metrics(dictionary):
         genre_sublists = dictionary.values()
         genre_list = [genre for sublist in genre_sublists for genre in sublist]
-        distinct_genres = len(set(genre_list))
+        # distinct_genres = len(set(genre_list))
         total_genres = len(genre_list)
         temp = Counter(genre_list)
         final_percs = {key:round((value/total_genres)*100,2) for key, value in temp.items()}
