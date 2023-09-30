@@ -7,6 +7,10 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import time
 from streamlit.components.v1 import html
+import os
+from collections import Counter
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 # SETTING PAGE CONFIG TO WIDE MODE AND ADDING A TITLE AND FAVICON
 st.set_page_config(layout="wide", page_title="Spotify Data")
@@ -31,6 +35,7 @@ def sign_in(token):
 def app_get_token():
     try:
         token = get_token(st.session_state["oauth"], st.session_state["code"])
+        st.session_state["cached_token"] = token
     except Exception as e:
         st.error("An error occurred during token retrieval!")
         st.write("The error is as follows:")
@@ -42,7 +47,8 @@ def app_get_token():
 
 def app_sign_in():
     try:
-        sp = sign_in(st.session_state["cached_token"])
+        token = st.session_state["cached_token"]
+        sp = sign_in(token)
     except Exception as e:
         st.error("An error occurred during sign-in!")
         st.write("The error is as follows:")
@@ -55,9 +61,12 @@ def app_sign_in():
 
 def app_display_welcome():
     # import secrets from streamlit deployment
-    client_id = st.secrets["client_id"]
-    client_secret = st.secrets["client_secret"]
-    uri = st.secrets["uri"]
+    # client_id = st.secrets["client_id"]
+    # client_secret = st.secrets["client_secret"]
+    # uri = st.secrets["uri"]
+    uri = "http://localhost:8501/"
+    client_id = "1a03d057b2754e71a51fb53f7ea86a89"
+    client_secret = "2653ca7cb78b4ddba5bdaa34a4b136d3"
     # set scope and establish connection
     scopes = " ".join(["user-read-private",'user-library-read', 'user-top-read'])
     # create oauth object
@@ -100,13 +109,18 @@ url_params = st.experimental_get_query_params()
 # attempt sign in with cached token
 if st.session_state["cached_token"] != "":
     sp = app_sign_in()
+    # token = st.session_state["cached_token"]
+    # st.write(token)
     st.write("current state")
 # if no token, but code in url, get code, parse token, and sign in
 elif "code" in url_params:
     # all params stored as lists, see doc for explanation
+    st.write("does this get hit?")
+
     st.session_state["code"] = url_params["code"][0]
     sp = app_sign_in()
     token=app_get_token()
+    st.session_state["cached_token"] = token
 
 else:
     app_display_welcome()
@@ -115,12 +129,64 @@ if st.session_state["signed_in"]:
     suc = st.success("Sign in success!")
     time.sleep(2)
     suc.empty()
-    sp=spotipy.Spotify(token)
+    if token == None:    
+        sp=spotipy.Spotify(st.session_state["cached_token"])
+    else:
+        sp=spotipy.Spotify(token)
     user= sp.current_user()
     st.write(user["display_name"])
-    top_user_artrists = sp.current_user_top_artists()
-    top_user_tracks = sp.current_user_top_tracks()
-    st.write(top_user_artrists)
+    top_user_artrists_long = sp.current_user_top_artists(limit=50, offset=0, time_range="long_term")
+    top_user_artrists_short = sp.current_user_top_artists(limit=50, offset=0, time_range="short_term")
+    top_user_tracks = sp.current_user_top_tracks(limit=50, offset=0, time_range="long_term")
+    # for i in top_user_artrists['items']:
+    #     st.write(i["genres"])
+    #     st.write(i["name"])
+    results_top_user_items_short_dict = {i["name"]:[i["genres"]] for i in top_user_artrists_short['items']}
+    # top_user_tracks_dict = [i["name"]:i["genres"] for i in top_user_tracks['items']]
+    results_top_user_items_long_dict = {i["name"]:i["genres"] for i in top_user_artrists_long['items']}
+    def genre_metrics(dictionary):
+        genre_sublists = dictionary.values()
+        genre_list = [genre for sublist in genre_sublists for genre in sublist]
+        distinct_genres = len(set(genre_list))
+        total_genres = len(genre_list)
+        temp = Counter(genre_list)
+        final_percs = {key:round((value/total_genres)*100,2) for key, value in temp.items()}
+        final = dict(sorted(final_percs.items(), key=lambda x:x[1],  reverse=True))
+        top_5_genres = [i for i in final.keys()][:10]
+        top_5_dict = {k: final[k] for k in top_5_genres}
+        other_dict_temp = {k: final[k] for k in final if k not in top_5_genres}
+        other_dict = {"other": round(sum(other_dict_temp.values()),2) }
+        top_5_dict.update(other_dict)
+        return top_5_dict
+    
+    long_df = pd.DataFrame(genre_metrics(results_top_user_items_long_dict), index=[0])
+    short_df = pd.DataFrame(genre_metrics(results_top_user_items_short_dict), index=[0])
+
+    fig = make_subplots(
+    cols = 2, rows = 1,
+    column_widths = [0.4, 0.4],
+    subplot_titles = ("Short term Artist Genre Stats" ,"Long term Artist Genre Stats"),
+    specs = [[{'type': 'treemap', 'rowspan': 1}, {'type': 'treemap'}]]
+    )
+
+    fig.add_trace(go.Treemap(
+        labels = short_df.columns,
+        parents=["Short", "Short", "Short", "Short", "Short", "Short", "Short", "Short", "Short", "Short", "Short"],
+        values = short_df.values.flatten(),
+        textinfo = "label+value",
+        root_color="lightgrey"
+    ),row = 1, col = 1)
+
+    fig.add_trace(go.Treemap(
+        labels = long_df.columns,
+        parents=["Long", "Long", "Long", "Long", "Long", "Long", "Long", "Long", "Long", "Long", "Long"],
+        values = long_df.values.flatten(),
+        textinfo = "label+value",
+        root_color="lightgrey"
+    ),row = 1, col = 2)
+
+    fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
+    fig.show()
 
 
 
