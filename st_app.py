@@ -18,7 +18,7 @@ st.set_page_config(layout="wide", page_title="Spotify Data")
 st.title("My Spotify Saved Songs Web App!")
 #################################### TESTING ####################################
 
-@st.cache_data
+# @st.cache_data
 def get_token(oauth, code):
     try:
         token = oauth.get_access_token(code, as_dict=False, check_cache=False)
@@ -29,12 +29,12 @@ def get_token(oauth, code):
         st.error("token not here?")
         st.write(notoken)
 
-@st.cache_data
+# @st.cache_data
 def sign_in(token):
     sp = spotipy.Spotify(auth=token)
     return sp
 
-@st.cache_data
+# @st.cache_data
 def app_get_token():
     try:
         token = get_token(st.session_state["oauth"], st.session_state["code"])
@@ -47,7 +47,7 @@ def app_get_token():
         st.session_state["cached_token"] = token
     return token
         
-@st.cache_data
+# @st.cache_data
 def app_sign_in():
     try:
         token = st.session_state["cached_token"]
@@ -69,8 +69,8 @@ def app_display_welcome():
     client_secret = st.secrets["client_secret"]
     uri = st.secrets["uri"]
     # uri = "http://localhost:8501/"
-    # client_id = "1a03d057b2754e71a51fb53f7ea86a89"
-    # client_secret = "2653ca7cb78b4ddba5bdaa34a4b136d3"
+    # client_id = "xxxxxx"
+    # client_secret = "xxxxxx"
     # set scope and establish connection
     scopes = " ".join(["user-read-private",'user-library-read', 'user-top-read'])
     # create oauth object
@@ -124,12 +124,12 @@ if st.session_state["signed_in"]:
     user= sp.current_user()
     st.write(user["display_name"])
 
-    @st.cache_data
+    # @st.cache_data
     def get_top_user_tracks(limit, offset, length):
         data = sp.current_user_top_tracks(limit=limit, offset=offset, time_range=length)
         return data
     
-    @st.cache_data
+    # @st.cache_data
     def get_top_user_artists(limit, offset, length):
         data = sp.current_user_top_artists(limit=limit, offset=offset, time_range=length)
         return data
@@ -137,7 +137,7 @@ if st.session_state["signed_in"]:
     top_user_artists_long = get_top_user_artists(50, 0, "long_term")
     top_user_artists_short = get_top_user_artists(50, 0, "short_term")
 
-    @st.cache_data
+    # @st.cache_data
     def genres_data(df):
         genre_list={i["name"]:i["genres"] for i in df['items']}
         return genre_list
@@ -146,7 +146,7 @@ if st.session_state["signed_in"]:
     results_top_user_items_long_dict = genres_data(top_user_artists_long)
 
 
-    @st.cache_data
+    # @st.cache_data
     def genre_metrics(given_dict):
         genre_sublists = given_dict.values()
         genre_list = [genre for sublist in genre_sublists for genre in sublist]
