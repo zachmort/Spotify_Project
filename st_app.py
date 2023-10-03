@@ -18,6 +18,7 @@ st.set_page_config(layout="wide", page_title="Spotify Data")
 st.title("My Spotify Saved Songs Web App!")
 #################################### TESTING ####################################
 
+@st.cache_data
 def get_token(oauth, code):
     try:
         token = oauth.get_access_token(code, as_dict=False, check_cache=False)
@@ -28,10 +29,12 @@ def get_token(oauth, code):
         st.error("token not here?")
         st.write(notoken)
 
+@st.cache_data
 def sign_in(token):
     sp = spotipy.Spotify(auth=token)
     return sp
 
+@st.cache_data
 def app_get_token():
     try:
         token = get_token(st.session_state["oauth"], st.session_state["code"])
@@ -44,7 +47,7 @@ def app_get_token():
         st.session_state["cached_token"] = token
     return token
         
-
+@st.cache_data
 def app_sign_in():
     try:
         token = st.session_state["cached_token"]
@@ -59,6 +62,7 @@ def app_sign_in():
 
     return sp
 
+@st.cache_data
 def app_display_welcome():
     # import secrets from streamlit deployment
     client_id = st.secrets["client_id"]
@@ -104,6 +108,7 @@ if "oauth" not in st.session_state:
 
 
 # get current url (stored as dict)
+
 url_params = st.experimental_get_query_params()
 
 # attempt sign in with cached token
@@ -116,7 +121,6 @@ if st.session_state["cached_token"] != "":
 elif "code" in url_params:
     # all params stored as lists, see doc for explanation
     st.write("does this get hit?")
-
     st.session_state["code"] = url_params["code"][0]
     sp = app_sign_in()
     token=app_get_token()
@@ -135,12 +139,30 @@ if st.session_state["signed_in"]:
         sp=spotipy.Spotify(token)
     user= sp.current_user()
     st.write(user["display_name"])
-    top_user_artrists_long = sp.current_user_top_artists(limit=50, offset=0, time_range="long_term")
-    top_user_artrists_short = sp.current_user_top_artists(limit=50, offset=0, time_range="short_term")
-    top_user_tracks = sp.current_user_top_tracks(limit=50, offset=0, time_range="long_term")
 
-    results_top_user_items_short_dict = {i["name"]:i["genres"] for i in top_user_artrists_short['items']}
-    results_top_user_items_long_dict = {i["name"]:i["genres"] for i in top_user_artrists_long['items']}
+    @st.cache_data
+    def get_top_user_tracks(limit, offset, length):
+        data = sp.current_user_top_tracks(limit=limit, offset=offset, time_range=length)
+        return data
+    
+    @st.cache_data
+    def get_top_user_artists(limit, offset, length):
+        data = sp.current_user_top_artists(limit=limit, offset=offset, time_range=length)
+        return data
+        
+    top_user_artists_long = get_top_user_artists(50, 0, "long_term")
+    top_user_artists_short = get_top_user_artists(50, 0, "short_term")
+
+    @st.cache_data
+    def genres_data(df):
+        genre_list={i["name"]:i["genres"] for i in df['items']}
+        return genre_list
+    
+    results_top_user_items_short_dict = genres_data(top_user_artists_short)
+    results_top_user_items_long_dict = genres_data(top_user_artists_long)
+
+
+    @st.cache_data
     def genre_metrics(given_dict):
         genre_sublists = given_dict.values()
         genre_list = [genre for sublist in genre_sublists for genre in sublist]
@@ -159,6 +181,7 @@ if st.session_state["signed_in"]:
     long_df = pd.DataFrame(genre_metrics(results_top_user_items_long_dict), index=[0])
     short_df = pd.DataFrame(genre_metrics(results_top_user_items_short_dict), index=[0])
 
+    
     fig = make_subplots(
     cols = 2, rows = 1,
     column_widths = [0.4, 0.4],
@@ -183,6 +206,7 @@ if st.session_state["signed_in"]:
     ),row = 1, col = 2)
 
     fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
+
     st.plotly_chart(fig)
 
 
