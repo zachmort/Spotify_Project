@@ -62,7 +62,7 @@ def app_sign_in():
 
     return sp
 
-@st.cache_data
+# @st.cache_data
 def app_display_welcome():
     # import secrets from streamlit deployment
     client_id = st.secrets["client_id"]
@@ -79,22 +79,12 @@ def app_display_welcome():
     st.session_state["oauth"] = oauth
     # retrieve auth url
     auth_url = oauth.get_authorize_url()
-    # this SHOULD open the link in the same tab when Streamlit Cloud is updated via the "_self" target
     link_html = " <a target=\"_self\" href=\"{url}\" >{msg}</a> ".format(url=auth_url,msg="Click me to authenticate!")
     if not st.session_state["signed_in"]:
         st.write(" ".join(["No tokens found for this session. Please log in by",
                             "clicking the link below."]))
-        if st.button('Login with Spotify')==True:
-            st.markdown(link_html, unsafe_allow_html=True)
-        # def open_page(url):
-        #     open_script= """
-        #         <script type="text/javascript">
-        #             window.open('%s', '_blank').focus();
-        #         </script>
-        #     """ % (url)
-        #     html(open_script)
-
-        # st.button('Open link', on_click=open_page, args=(link_html,))
+    if st.button('Login with Spotify')==True:
+        st.markdown(link_html, unsafe_allow_html=True)
 
 
 if "signed_in" not in st.session_state:
@@ -106,16 +96,11 @@ if "code" not in st.session_state:
 if "oauth" not in st.session_state:
     st.session_state["oauth"] = None
 
-
-# get current url (stored as dict)
-
 url_params = st.experimental_get_query_params()
 
 # attempt sign in with cached token
 if st.session_state["cached_token"] != "":
     sp = app_sign_in()
-    # token = st.session_state["cached_token"]
-    # st.write(token)
     st.write("current state")
 # if no token, but code in url, get code, parse token, and sign in
 elif "code" in url_params:
@@ -125,7 +110,6 @@ elif "code" in url_params:
     sp = app_sign_in()
     token=app_get_token()
     st.session_state["cached_token"] = token
-
 else:
     app_display_welcome()
 
