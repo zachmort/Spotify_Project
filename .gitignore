@@ -3,6 +3,10 @@
 test_2.py
 test_temp.py
 analysis.ipynb
+.cache
+st_app_backup.py
+song_data.csv
+testing.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
