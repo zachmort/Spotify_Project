@@ -3,6 +3,7 @@
 test_2.py
 test_temp.py
 analysis.ipynb
+.cache
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
