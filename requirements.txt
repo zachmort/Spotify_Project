@@ -1,9 +1,7 @@
 plotly.express
 plotly
-# base64
+spotipy
 datetime
-# urllib.parse
 requests
-# json
-# webbrowser
-# urllib
+asyncio
+
