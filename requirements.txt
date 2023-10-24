@@ -3,4 +3,5 @@ plotly
 spotipy
 datetime
 requests
+asyncio
 
