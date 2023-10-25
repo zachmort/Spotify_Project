@@ -80,8 +80,8 @@ def app_display_welcome():
     client_secret = st.secrets["client_secret"]
     uri = st.secrets["uri"]
     # uri = "http://localhost:8501/"
-    client_id = "xxxxxx"
-    client_secret = "xxxxxx"
+    # client_id = "xxxxxx"
+    # client_secret = "xxxxxx"
     # set scope and establish connection
     scopes = " ".join(["user-read-private",'user-library-read', 'user-top-read'])
     # create oauth object
