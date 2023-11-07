@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import requests
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import time
@@ -83,7 +82,7 @@ def app_display_welcome():
     # client_id = "xxxxxx"
     # client_secret = "xxxxxx"
     # set scope and establish connection
-    scopes = " ".join(["user-read-private",'user-library-read', 'user-top-read'])
+    scopes = " ".join(["user-read-private",'user-library-read', 'user-top-read', 'playlist-read-private', 'playlist-read-collaborative'])
     # create oauth object
     oauth = SpotifyOAuth(scope=scopes,redirect_uri=uri,client_id=client_id,client_secret=client_secret)
     # store oauth in session
@@ -152,7 +151,7 @@ if st.session_state["signed_in"]:
     time.sleep(1)
     my_bar.empty()
 
-
+    token = None
     if token == None:    
         sp=spotipy.Spotify(st.session_state["cached_token"])
     else:
@@ -160,15 +159,6 @@ if st.session_state["signed_in"]:
         user= sp.current_user()
         user_name = user["display_name"]
         st.header(f"Hello! {user_name}")
-
-    # try: 
-    #     if token == None:    
-    #         sp=spotipy.Spotify(st.session_state["cached_token"])
-    # except Exception as e:
-    #     sp=spotipy.Spotify(token)
-    #     user= sp.current_user()
-    #     user_name = user["display_name"]
-    #     st.header(f"Hello! {user_name}")
 
 ######################################################################################################################################################
 # DATA GATHERING
@@ -193,19 +183,25 @@ if st.session_state["signed_in"]:
                 my_bar.progress(i/500, text=progress_text)
                 results = sp.current_user_saved_tracks(offset=i, limit=50)
                 full_list.append(results)
-                placeholer.text(f"{int(percent_complete)}%")
+                placeholer.text(f"{int(i/500)}%")
             time.sleep(1)
             placeholer.empty()
             my_bar.empty()
             return full_list
         except Exception as e:
-            print("error with processing")
+            print(e, "error with processing")
 
+###########
+#TODO implement either async tasks or api calls in parallel
+###########
     # def run_api_call():
     #     try:
-    #         incs_50 = generate_chunks()
-    #         p = Pool(processes=4)
-    #         results = p.map(loopthrough, incs_50)
+    #         with Pool(processes=5) as p:
+    #             incs_50 = generate_chunks()
+    #             results = p.apply_async(loopthrough, incs_50)
+    #             print(results.get(timeout=1))
+    #             p.close()
+    #             st.write("Process Finished")
     #         return results
     #     except Exception as e:
     #         print(e)
@@ -216,6 +212,9 @@ if st.session_state["signed_in"]:
 
 
     def load_user_saved_tracks_data():
+        """
+        This calls the loopthrough function and parses all of the returned data into a dictionary with the song_uri as the key for each entry
+        """
         data = loopthrough()
         saved_tracks_parsed={}
         for index_i, i in enumerate(data):  
@@ -251,10 +250,11 @@ if st.session_state["signed_in"]:
         df_explicit = ((df.groupby(['song_explicit']).count()/len(df))*100).reset_index()
         df_explicit = df_explicit.rename(columns={'added_to_playlist_time':'explicit_%'})
         df_explicit['explicit_%'] = round(df_explicit['explicit_%'], 1)
+        explicitmetric = df_explicit.loc[: ,['explicit_%'] ]
 
-        return (total_playlist_length_hours, distinct_artist_count, total_songs, df_explicit)
+        return (total_playlist_length_hours, distinct_artist_count, total_songs, explicitmetric)
 
-    # Throw all of this into a container that houses each section of my page
+
     with st.container():
         st.markdown("""<style>
                         div[data-testid="column"]:nth-of-type(1)
@@ -269,23 +269,15 @@ if st.session_state["signed_in"]:
                         {text-align: center;
                         }     </style>""",unsafe_allow_html=True)
         c1, c2, c3, c4, c5 = st.columns(5)
-        c1.subheader(summary_metrics(track_details_df)[0])
-        c2.subheader(summary_metrics(track_details_df)[1])
-        c3.subheader(f"total_songs {summary_metrics(track_details_df)[2]}")
-        c4.subheader(summary_metrics(track_details_df)[3])
-        c5.subheader(summary_metrics(track_details_df)[1])
-
-    # tuple_metrics = summary_metrics(dataframe_temp)
-    # total_playlist_length_hours = tuple_metrics[0]
-    # col1, col2, col3 = st.columns(3)
-    # col1.metric("Playlist Length (hours)", f"{total_playlist_length_hours}")
-    # col2.metric("Total Distinct Artists", f"{distinct_artist_count}")
-    # col3.metric("Total Songs", f"{total_songs}")
-
-    # #Plotting most recent artists on page
-    # st.write("## Most Recently Added Artists!")
-    # most_recent_5_songs = df.loc[:50,['artist_name','artist_image']]
-    # st.image(list(most_recent_5_songs.artist_image.unique()[0:5]), caption=list(most_recent_5_songs.artist_name.unique()[0:5]))
+        c1.subheader("Total Liked Songs Length (hours)")
+        c1.write(summary_metrics(track_details_df)[0])
+        c2.subheader("Total Unique Artists")
+        c2.write(summary_metrics(track_details_df)[1])
+        c3.subheader("Total Songs")
+        c3.write(summary_metrics(track_details_df)[2])
+        c2.subheader("% of Explicit Songs")
+        c4.write(summary_metrics(track_details_df)[3])
+        # c5.subheader(summary_metrics(track_details_df)[1])
 
 
     def get_top_user_tracks(limit, offset, length):
@@ -322,7 +314,6 @@ if st.session_state["signed_in"]:
         other_dict_temp = {k: final[k] for k in final if k not in top_5_genres}
         other_dict = {"other": round(sum(other_dict_temp.values()),2) }
         top_5_dict.update(other_dict)
-        # top_5_dict = {k:f"{v}%" for k, v in top_5_dict.items()}
         return top_5_dict
     
     long_df = pd.DataFrame(genre_metrics(results_top_user_items_long_dict), index=[0])
@@ -336,11 +327,6 @@ if st.session_state["signed_in"]:
         specs = [[{'type': 'treemap', 'rowspan': 1}, {'type': 'treemap'}]])
 
         fig.add_trace(go.Treemap(
-            # TODO 
-            # DONE # make text in each box bigger
-            # DONE #  add "%" sign to each number
-            # Add description to the top of this section
-            # DONE #Add section to a container
             labels = short_df.columns,
             parents=["Short", "Short", "Short", "Short", "Short", "Short", "Short", "Short", "Short", "Short", "Short"],
             values = short_df.values.flatten(),
@@ -460,26 +446,6 @@ if st.session_state["signed_in"]:
     with tab2:
         st.header("You have stuck with these artists throughout your listening journey")
         tab_formatting(common_10_images, common_10_names, common_10_pop_rating)
-
-
-
-############ IDEAS #############
-#TODO DONE
-# top 20 artists all time (grid with pics)
-#TODO DONE
-# (do a comparision of the top 20 artists from long term vs short term (show pics of the artists that appear in both and write a little description that tsalks about how consistent or nostalgic these artists are for you))
-#TODO DONE
-# Most recent moods for music  ()
-
-# Most recently played tracks (count freq of top 200 and see what people are listening to the most)
-    # Artist pop (highest 5 lowest 5)
-#
-
-# # song explicit % of all songs with a true and false banner with %s below each
-# st.write(df_explicit.loc[:, ['song_explicit', 'explicit_%']])
-# bar_chart_explicit= px.bar(data_frame=df_explicit, x='song_explicit', y='explicit_%', template="ggplot2")
-# st.plotly_chart(bar_chart_explicit)
-# # st.bar_chart(data=df_explicit, x='song_explicit', y='explicit_%')
 
 
 
