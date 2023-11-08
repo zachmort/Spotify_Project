@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+import numpy as np
 import time
 from streamlit.components.v1 import html
 import os
@@ -78,9 +79,6 @@ def app_display_welcome():
     client_id = st.secrets["client_id"]
     client_secret = st.secrets["client_secret"]
     uri = st.secrets["uri"]
-    # uri = "http://localhost:8501/"
-    # client_id = "xxxxxx"
-    # client_secret = "xxxxxx"
     # set scope and establish connection
     scopes = " ".join(["user-read-private",'user-library-read', 'user-top-read', 'playlist-read-private', 'playlist-read-collaborative'])
     # create oauth object
@@ -183,7 +181,7 @@ if st.session_state["signed_in"]:
                 my_bar.progress(i/500, text=progress_text)
                 results = sp.current_user_saved_tracks(offset=i, limit=50)
                 full_list.append(results)
-                placeholer.text(f"{int(i/500)}%")
+                placeholer.text(f"{i/500}%")
             time.sleep(1)
             placeholer.empty()
             my_bar.empty()
@@ -247,12 +245,13 @@ if st.session_state["signed_in"]:
         total_playlist_length_hours = round((df["song_length_seconds"].sum())/(1000),1) 
         distinct_artist_count = len(df['unique_artist_id'].unique())
         total_songs = len(df)
+        avg_song_pop = df["song_popularity"].mean()
         df_explicit = ((df.groupby(['song_explicit']).count()/len(df))*100).reset_index()
         df_explicit = df_explicit.rename(columns={'added_to_playlist_time':'explicit_%'})
         df_explicit['explicit_%'] = round(df_explicit['explicit_%'], 1)
         explicitmetric = df_explicit.loc[: ,['explicit_%'] ]
 
-        return (total_playlist_length_hours, distinct_artist_count, total_songs, explicitmetric)
+        return (total_playlist_length_hours, distinct_artist_count, total_songs, explicitmetric, avg_song_pop)
 
 
     with st.container():
@@ -262,22 +261,38 @@ if st.session_state["signed_in"]:
                         div[data-testid="column"]:nth-of-type(2)
                         {text-align: center;}
                         div[data-testid="column"]:nth-of-type(3)
-                        {text-align: center;
+                        {text-align: center;}
                         div[data-testid="column"]:nth-of-type(4)
-                        {text-align: center;
+                        {text-align: center;}
                         div[data-testid="column"]:nth-of-type(5)
-                        {text-align: center;
-                        }     </style>""",unsafe_allow_html=True)
+                        {text-align: center;}
+                        div[data-testid="column"]:nth-of-type(6)
+                        {text-align: center;} 
+                        div[data-testid="column"]:nth-of-type(7)
+                        {text-align: center;}
+                        div[data-testid="column"]:nth-of-type(8)
+                        {text-align: center;}
+                        div[data-testid="column"]:nth-of-type(9)
+                        {text-align: center;}
+                        div[data-testid="column"]:nth-of-type(10)
+                        {text-align: center;}
+                             </style>""",unsafe_allow_html=True)
         c1, c2, c3, c4, c5 = st.columns(5)
-        c1.subheader("Total Liked Songs Length (hours)")
-        c1.write(summary_metrics(track_details_df)[0])
+        c1.subheader("Playlist Length (hours)")
+        c1.divider()
+        c1.subheader(summary_metrics(track_details_df)[0])
         c2.subheader("Total Unique Artists")
-        c2.write(summary_metrics(track_details_df)[1])
+        c2.divider()
+        c2.subheader(summary_metrics(track_details_df)[1])
         c3.subheader("Total Songs")
-        c3.write(summary_metrics(track_details_df)[2])
-        c2.subheader("% of Explicit Songs")
-        c4.write(summary_metrics(track_details_df)[3])
-        # c5.subheader(summary_metrics(track_details_df)[1])
+        c3.divider()
+        c3.subheader(summary_metrics(track_details_df)[2])
+        c4.subheader("Explicit Song %")
+        c4.divider()
+        c4.subheader(summary_metrics(track_details_df)[3])
+        c5.subheader("Avg Song Popularity")
+        c5.divider()
+        c5.subheader(round(summary_metrics(track_details_df)[4]))
 
 
     def get_top_user_tracks(limit, offset, length):
