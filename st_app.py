@@ -76,9 +76,12 @@ def app_sign_in():
 
 def app_display_welcome():
     # import secrets from streamlit deployment
-    client_id = st.secrets["client_id"]
-    client_secret = st.secrets["client_secret"]
-    uri = st.secrets["uri"]
+    # client_id = st.secrets["client_id"]
+    # client_secret = st.secrets["client_secret"]
+    # uri = st.secrets["uri"]
+    uri = "http://localhost:8501/"
+    client_id = "1a03d057b2754e71a51fb53f7ea86a89"
+    client_secret = "93ab0666b2be4880aad88cad5e741009"
     # set scope and establish connection
     scopes = " ".join(["user-read-private",'user-library-read', 'user-top-read', 'playlist-read-private', 'playlist-read-collaborative'])
     # create oauth object
