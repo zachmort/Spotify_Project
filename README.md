@@ -12,7 +12,6 @@
     <a href="https://mymusicmetrics.streamlit.app/"><strong>Explore your listening habits »</strong></a>
     </p>
 
-    <!-- TABLE OF CONTENTS -->
 <details>
   <summary>Table of Contents</summary>
   <ol>
@@ -49,14 +48,15 @@ This web-app was built using the follwing:
 
 * [![Python][Python]][Python-url]
 * [![Spotipy][Spotipy]][Spotipy-url]
-* [![Linkedin][Linkedin]][linkedin-url]
+* [![Linkedin][Linkedin]][Linkedin-url]
 
 
 <!-- Markdown Links -->
-[Python]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=Python&logoColor=white
+[Python]: https://img.shields.io/badge/Python-0769AD?style=for-the-badge&logo=Python&logoColor=white
 [Python-url]: https://www.python.org/
-[Spotipy]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=Spotipy&logoColor=white
+[Spotipy]: https://img.shields.io/badge/Spotipy-0769AD?style=for-the-badge&logo=Spotipy&logoColor=white
 [Spotipy-url]: https://spotipy.readthedocs.io/en/2.22.1/
-https://streamlit.io/
-[linkedin]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://www.linkedin.com/in/zachary-mortenson-8923b4152/
+[Streamlit]: https://img.shields.io/badge/Streamlit-0769AD?style=for-the-badge&logo=Streamlit&logoColor=white
+[Streamlit-url]: https://streamlit.io/
+[Linkedin]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
+[Linkedin-url]: https://www.linkedin.com/in/zachary-mortenson-8923b4152/
