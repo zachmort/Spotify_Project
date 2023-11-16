@@ -165,7 +165,9 @@ if st.session_state["signed_in"]:
         st.header(f"Hello! {user_name}")
 
 ######################################################################################################################################################
-# DATA GATHERING
+######################################################################################################################################################
+# Defining Functions
+######################################################################################################################################################
 ######################################################################################################################################################
 
     def generate_chunks():
@@ -174,6 +176,7 @@ if st.session_state["signed_in"]:
         for i in range(0, 201, 50):
             chunkList.append(i)
         return chunkList
+
 
     @st.cache_data
     def loopthrough():
@@ -242,10 +245,6 @@ if st.session_state["signed_in"]:
         return saved_tracks_parsed
 
 
-    track_data_dict=load_user_saved_tracks_data()
-    track_data_prep=list(track_data_dict.values())
-    track_details_df =pd.DataFrame(track_data_prep)
-
     @st.cache_data
     def summary_metrics(df: pd.DataFrame):
         """ Provides summary stats for user liked songs playlist"""
@@ -260,72 +259,36 @@ if st.session_state["signed_in"]:
 
         return (total_playlist_length_hours, distinct_artist_count, total_songs, explicitmetric, avg_song_pop)
 
-    st.write("")
-    st.write("")
-    with st.container():
-        st.markdown("""<style>
-                        div[data-testid="column"]:nth-of-type(1)
-                        {text-align: center;} 
-                        div[data-testid="column"]:nth-of-type(2)
-                        {text-align: center;}
-                        div[data-testid="column"]:nth-of-type(3)
-                        {text-align: center;}
-                        div[data-testid="column"]:nth-of-type(4)
-                        {text-align: center;}
-                        div[data-testid="column"]:nth-of-type(5)
-                        {text-align: center;}
-                        div[data-testid="column"]:nth-of-type(6)
-                        {text-align: center;} 
-                        div[data-testid="column"]:nth-of-type(7)
-                        {text-align: center;}
-                        div[data-testid="column"]:nth-of-type(8)
-                        {text-align: center;}
-                        div[data-testid="column"]:nth-of-type(9)
-                        {text-align: center;}
-                        div[data-testid="column"]:nth-of-type(10)
-                        {text-align: center;}
-                             </style>""",unsafe_allow_html=True)
-        c1, c2, c3, c4, c5 = st.columns(5)
-        c1.subheader("Playlist Length (hours)")
-        c1.divider()
-        c1.subheader(summary_metrics(track_details_df)[0])
-        c2.subheader("Total Unique Artists")
-        c2.divider()
-        c2.subheader(summary_metrics(track_details_df)[1])
-        c3.subheader("Total Songs")
-        c3.divider()
-        c3.subheader(summary_metrics(track_details_df)[2])
-        c4.subheader("Explicit Song %")
-        c4.divider()
-        c4.subheader(f"{str(pd.DataFrame(summary_metrics(track_details_df)[3]).values[0])}%")
-        c5.subheader("Avg Song Popularity")
-        c5.divider()
-        c5.subheader(round(summary_metrics(track_details_df)[4]))
-        st.write("")
-        st.write("")
-        st.write("")
-        st.write("")
 
-
+    @st.cache_data
     def get_top_user_tracks(limit, offset, length):
         data = sp.current_user_top_tracks(limit=limit, offset=offset, time_range=length)
         return data
-    
 
+
+    @st.cache_data
     def get_top_user_artists(limit, offset, length):
         data = sp.current_user_top_artists(limit=limit, offset=offset, time_range=length)
         return data
-        
-    top_user_artists_long = get_top_user_artists(50, 0, "long_term")
-    top_user_artists_short = get_top_user_artists(50, 0, "short_term")
 
 
-    def genres_data(df):
-        genre_list={i["name"]:i["genres"] for i in df['items']}
-        return genre_list
-    
-    results_top_user_items_short_dict = genres_data(top_user_artists_short)
-    results_top_user_items_long_dict = genres_data(top_user_artists_long)
+    @st.cache_data
+    def get_user_playlists():
+        results = sp.current_user_playlists(offset=0, limit=50)
+        df= pd.json_normalize(results["items"],
+                            meta=["name", "public","collaborative", ["tracks", "total"]])
+
+        return df
+
+
+    @st.cache_data
+    def playlist_selected_metrics(playlist_name_chosen):
+        user_playlist_data = get_user_playlists()
+        selected_playlist_data = user_playlist_data.loc[user_playlist_data["name"]==playlist_name_chosen]
+        name_playlist = selected_playlist_data["name"]
+        public_flag_playlist = selected_playlist_data["public"]
+        return selected_playlist_data
+
 
     @st.cache_data
     def genre_metrics(given_dict):
@@ -342,39 +305,52 @@ if st.session_state["signed_in"]:
         other_dict = {"other": round(sum(other_dict_temp.values()),2) }
         top_5_dict.update(other_dict)
         return top_5_dict
-    
-    long_df = pd.DataFrame(genre_metrics(results_top_user_items_long_dict), index=[0])
-    short_df = pd.DataFrame(genre_metrics(results_top_user_items_short_dict), index=[0])
 
 
-    with st.container():
-        fig = make_subplots(
-        cols = 2, rows = 1,column_widths = [1, 1],
-        subplot_titles = ("Short term Artist Genre Stats" ,"Long term Artist Genre Stats"),
-        specs = [[{'type': 'treemap', 'rowspan': 1}, {'type': 'treemap'}]])
+    @st.cache_data
+    def genres_data(df):
+        genre_list={i["name"]:i["genres"] for i in df['items']}
+        return genre_list
 
-        fig.add_trace(go.Treemap(
-            labels = short_df.columns,
-            parents=["Short", "Short", "Short", "Short", "Short", "Short", "Short", "Short", "Short", "Short", "Short"],
-            values = short_df.values.flatten(),
-            textinfo = "label+percent parent",
-            root_color="lightgrey"),row = 1, col = 1)
 
-        fig.add_trace(go.Treemap(
-            labels = long_df.columns,
-            parents=["Long", "Long", "Long", "Long", "Long", "Long", "Long", "Long", "Long", "Long", "Long"],
-            values = long_df.values.flatten(),
-            textinfo = "label+percent parent",
-            root_color="lightgrey", ),row = 1, col = 2)
-
-        fig.update_layout(  width=1300,height=650 
-                            ,margin=dict(l=20, r=20, t=20, b=20)
-                            ,     font=dict(family="Courier New, monospace",
-                                                size=18)
-                            , yaxis_tickformat = '%'
-                                )
-        st.plotly_chart(fig, use_container_width=True)
+    @st.cache_data
+    def playlist_summary_metrics(data: pd.DataFrame):
         st.write("")
+        st.write("")
+        with st.container():
+            st.markdown("""<style>
+                            div[data-testid="column"]:nth-of-type(1) {text-align: center;} 
+                            div[data-testid="column"]:nth-of-type(2) {text-align: center;}
+                            div[data-testid="column"]:nth-of-type(3) {text-align: center;}
+                            div[data-testid="column"]:nth-of-type(4) {text-align: center;}
+                            div[data-testid="column"]:nth-of-type(5) {text-align: center;}
+                            div[data-testid="column"]:nth-of-type(6) {text-align: center;} 
+                            div[data-testid="column"]:nth-of-type(7) {text-align: center;}
+                            div[data-testid="column"]:nth-of-type(8) {text-align: center;}
+                            div[data-testid="column"]:nth-of-type(9) {text-align: center;}
+                            div[data-testid="column"]:nth-of-type(10) {text-align: center;}
+                                </style>""",unsafe_allow_html=True)
+            c1, c2, c3, c4, c5 = st.columns(5)
+            c1.subheader("Playlist Length (hours)")
+            c1.divider()
+            c1.subheader(summary_metrics(data)[0])
+            c2.subheader("Total Unique Artists")
+            c2.divider()
+            c2.subheader(summary_metrics(data)[1])
+            c3.subheader("Total Songs")
+            c3.divider()
+            c3.subheader(summary_metrics(data)[2])
+            c4.subheader("Explicit Song %")
+            c4.divider()
+            c4.subheader(f"{str(pd.DataFrame(summary_metrics(data)[3]).values[0])}%")
+            c5.subheader("Avg Song Popularity")
+            c5.divider()
+            c5.subheader(round(summary_metrics(data)[4]))
+            st.write("")
+            st.write("")
+            st.write("")
+            st.write("")
+
 
     @st.cache_data
     def get_top_50_artists(df):
@@ -386,44 +362,6 @@ if st.session_state["signed_in"]:
             , i["popularity"]]
         return artist_info_dict
 
-
-    long_df_artists = get_top_50_artists(top_user_artists_long)
-    short_df_artists = get_top_50_artists(top_user_artists_short)
-    
-    def take(n, iterable):
-        """Return the first n items of the iterable as a list."""
-        return dict(islice(iterable.items(), n))
-
-    long_term_top_10 = take(10, long_df_artists)
-    short_term_top_10 = take(10, short_df_artists)
-
-    top10_artists_names = []
-    top10_artists_rating = []
-    top10_artists_images = []
-    for k,v  in long_df_artists.items():
-        top10_artists_names.append(v[0])
-        top10_artists_rating.append(v[2])
-        top10_artists_images.append(v[1])
-
-
-    common_list=[]
-    for i in long_term_top_10.keys():
-        if i in short_term_top_10.keys():
-            common_list.append(i)
-    
-
-    short_long_common_artists = {}
-    for k, v in long_term_top_10.items():
-        if k in common_list:
-            short_long_common_artists[k] = v
-    
-    common_10_names = []
-    common_10_images = []
-    common_10_pop_rating = []
-    for k,v  in short_long_common_artists.items():
-        common_10_names.append(v[0])
-        common_10_images.append(v[1])
-        common_10_pop_rating.append(v[2])
 
     @st.cache_data
     def tab_formatting(artist_image: list, artist_name: list, artist_pop: list):
@@ -466,6 +404,107 @@ if st.session_state["signed_in"]:
                                 st.write(" ")
                                 st.subheader(artist_pop[index])
 
+    @st.cache_data
+    def take(n, iterable):
+        """Return the first n items of the iterable as a list."""
+        return dict(islice(iterable.items(), n))                                
+
+######################################################################################################################################################
+######################################################################################################################################################
+# Data Gathering
+# Variable defs
+######################################################################################################################################################
+######################################################################################################################################################
+
+    track_data_dict=load_user_saved_tracks_data()
+    track_data_prep=list(track_data_dict.values())
+    track_details_df =pd.DataFrame(track_data_prep)
+
+    top_user_artists_long = get_top_user_artists(50, 0, "long_term")
+    top_user_artists_short = get_top_user_artists(50, 0, "short_term")
+
+    
+    results_top_user_items_short_dict = genres_data(top_user_artists_short)
+    results_top_user_items_long_dict = genres_data(top_user_artists_long)
+    
+    long_df = pd.DataFrame(genre_metrics(results_top_user_items_long_dict), index=[0])
+    short_df = pd.DataFrame(genre_metrics(results_top_user_items_short_dict), index=[0])
+
+    long_df_artists = get_top_50_artists(top_user_artists_long)
+    short_df_artists = get_top_50_artists(top_user_artists_short)
+
+    long_term_top_10 = take(10, long_df_artists)
+    short_term_top_10 = take(10, short_df_artists)
+
+
+    top10_artists_names = []
+    top10_artists_rating = []
+    top10_artists_images = []
+    for k,v  in long_df_artists.items():
+        top10_artists_names.append(v[0])
+        top10_artists_rating.append(v[2])
+        top10_artists_images.append(v[1])
+
+    common_list=[]
+    for i in long_term_top_10.keys():
+        if i in short_term_top_10.keys():
+            common_list.append(i)
+    
+    short_long_common_artists = {}
+    for k, v in long_term_top_10.items():
+        if k in common_list:
+            short_long_common_artists[k] = v
+    
+    common_10_names = []
+    common_10_images = []
+    common_10_pop_rating = []
+    for k,v  in short_long_common_artists.items():
+        common_10_names.append(v[0])
+        common_10_images.append(v[1])
+        common_10_pop_rating.append(v[2])
+
+######################################################################################################################################################
+######################################################################################################################################################
+# Form layout/creation
+
+######################################################################################################################################################
+######################################################################################################################################################
+
+    with st.container():
+        playlist_summary_metrics(track_details_df)
+
+
+    with st.container():
+        fig = make_subplots(
+        cols = 2, rows = 1,column_widths = [1, 1],
+        subplot_titles = ("Short term Artist Genre Stats" ,"Long term Artist Genre Stats"),
+        specs = [[{'type': 'treemap', 'rowspan': 1}, {'type': 'treemap'}]])
+
+        fig.add_trace(go.Treemap(
+            labels = short_df.columns,
+            parents=["Short", "Short", "Short", "Short", "Short", "Short", "Short", "Short", "Short", "Short", "Short"],
+            values = short_df.values.flatten(),
+            textinfo = "label+percent parent",
+            root_color="lightgrey"),row = 1, col = 1)
+
+        fig.add_trace(go.Treemap(
+            labels = long_df.columns,
+            parents=["Long", "Long", "Long", "Long", "Long", "Long", "Long", "Long", "Long", "Long", "Long"],
+            values = long_df.values.flatten(),
+            textinfo = "label+percent parent",
+            root_color="lightgrey", ),row = 1, col = 2)
+
+        fig.update_layout(  width=1300,height=650 
+                            ,margin=dict(l=20, r=20, t=20, b=20)
+                            ,     font=dict(family="Courier New, monospace",
+                                                size=18)
+                            , yaxis_tickformat = '%'
+                                )
+        st.plotly_chart(fig, use_container_width=True)
+        st.write("")
+
+
+
     tab1, tab2 = st.tabs(["Top Artists All Time","Artist You Can't Get Enough of"])
 
     with tab1:
@@ -479,28 +518,11 @@ if st.session_state["signed_in"]:
         tab_formatting(common_10_images, common_10_names, common_10_pop_rating)
 
 
-    @st.cache_data
-    def get_user_playlists():
-        results = sp.current_user_playlists(offset=0, limit=50)
-        df= pd.json_normalize(results["items"],
-                            meta=["name", "public","collaborative", ["tracks", "total"]])
-
-        return df
-
-    user_playlist_data = get_user_playlists()
-    # st.write(user_playlist_data)
-
-    @st.cache_data
-    def playlist_selected_metrics(playlist_name_chosen):
-        selected_playlist_data = user_playlist_data.loc[user_playlist_data["name"]==playlist_name_chosen]
-        name_playlist = selected_playlist_data["name"]
-        public_flag_playlist = selected_playlist_data["public"]
-        return selected_playlist_data
-
     with st.form("Playlist Form", clear_on_submit=False):
+        user_playlist_data = get_user_playlists()
         col_playlist_dropdown, col_numeric_data_1, col_numeric_data_2 = st.columns(3)
         list_playlists = user_playlist_data["name"].unique()
-        datacols = user_playlist_data.loc[ :,:]
+        # datacols = user_playlist_data.loc[ :,:]
         col_playlist_dropdown.selectbox('Select Playlist', list_playlists, key="playlist_name")
         playlist_name_chosen = str(st.session_state["playlist_name"])
         submitted = st.form_submit_button("Confirm Playlist")
