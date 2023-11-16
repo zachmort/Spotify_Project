@@ -1,4 +1,4 @@
-<br />
+<!-- <br /> -->
 <div align="center">
   <!-- <a href="https://github.com/othneildrew/Best-README-Template"> -->
     <!-- <img src="images/logo.png" alt="Logo" width="80" height="80"> -->
@@ -31,14 +31,15 @@
     <li><a href="#disclaimers">Disclaimers</a></li>
   </ol>
 </details>
+</div>
 
 
 ## About the App!
 
 Once a year Spotify releases Spotify Wrapped, but have you ever wanted more information about your listening habits. This web app takes your spotify listening data and does exactly that!
 
-<!--> ADD A PICTURE OF THE DASH<-->
-Some metrics you will find
+<!-- ADD A PICTURE OF THE DASH -->
+Some metrics you can find in the app!
 - Playlist Data
 - Long/Short term listening habits
 - Music listening Trends
@@ -47,16 +48,17 @@ Some metrics you will find
 ## Built With
 This web-app was built using the follwing:
 
-* [![Python][Python]][Python-url]
-* [![Spotipy][Spotipy]][Spotipy-url]
-* [![Plotly][Plotly]][Plotly-url]
+[![Python][Python]][Python-url]
+[![Spotipy][Spotipy]][Spotipy-url]
+[![Plotly][Plotly]][Plotly-url]
 
 ## How to Use
  Simply follow this link and sign in to your spotify account and allow the magic to take place!
 
 ## Disclaimers
- This project is in no way associated with Spotify and only uses the Spotify API.
+ This project is in no way associated with Spotify and only uses the Spotify API. </br>
  This project follows the guidelines for the spotify developer docs.
+ </br>
  Oauth2 is used here for safe guarding user data.
 
 
