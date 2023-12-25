@@ -76,9 +76,12 @@ def app_sign_in():
 
 def app_display_welcome():
     # import secrets from streamlit deployment
-    client_id = st.secrets["client_id"]
-    client_secret = st.secrets["client_secret"]
-    uri = st.secrets["uri"]
+    # client_id = st.secrets["client_id"]
+    # client_secret = st.secrets["client_secret"]
+    # uri = st.secrets["uri"]
+    client_id = "1a03d057b2754e71a51fb53f7ea86a89"
+    uri = "http://localhost:8501/"
+    client_secret = "eea70d4ae1174b87a4b3994f43d97b72"
     # set scope and establish connection
     scopes = " ".join(["user-read-private",'user-library-read', 'user-top-read', 'playlist-read-private', 'playlist-read-collaborative'])
     # create oauth object
@@ -138,20 +141,20 @@ else:
     app_display_welcome()
 
 if st.session_state["signed_in"]:
-    suc = st.success("Sign in success!")
+    # suc = st.success("Sign in success!")
     # time.sleep(2)
-    suc.empty()
-    progress_text = "Operation in progress. Please wait."
-    my_bar = st.progress(0, text=progress_text)
-    placeholer = st.empty()
+    # suc.empty()
+    # progress_text = "Operation in progress. Please wait."
+    # my_bar = st.progress(0, text=progress_text)
+    # placeholer = st.empty()
 
-    for percent_complete in range(100):
-        time.sleep(0.01)
-        my_bar.progress(percent_complete + 1, text=progress_text)
-        placeholer.text(f"{int(percent_complete)}%")
-    placeholer.empty()
-    time.sleep(1)
-    my_bar.empty()
+    # for percent_complete in range(100):
+    #     time.sleep(0.01)
+    #     my_bar.progress(percent_complete + 1, text=progress_text)
+    #     placeholer.text(f"{int(percent_complete)}%")
+    # placeholer.empty()
+    # time.sleep(1)
+    # my_bar.empty()
 
     token = None
     if token == None:    
@@ -178,7 +181,7 @@ if st.session_state["signed_in"]:
         return chunkList
 
 
-    @st.cache_data
+    @st.cache_data(show_spinner=False)
     def loopthrough():
         try:
             incs_50 = generate_chunks()
@@ -218,7 +221,7 @@ if st.session_state["signed_in"]:
     # st.write(data)
         
 
-    @st.cache_data
+    @st.cache_data(show_spinner=False)
     def load_user_saved_tracks_data():
         """
         This calls the loopthrough function and parses all of the returned data into a dictionary with the song_uri as the key for each entry
@@ -245,34 +248,42 @@ if st.session_state["signed_in"]:
         return saved_tracks_parsed
 
 
-    @st.cache_data
+    @st.cache_data(show_spinner=False)
     def summary_metrics(df: pd.DataFrame):
         """ Provides summary stats for user liked songs playlist"""
-        total_playlist_length_hours = round((df["song_length_seconds"].sum())/(1000),1) 
-        distinct_artist_count = len(df['unique_artist_id'].unique())
-        total_songs = len(df)
-        avg_song_pop = df["song_popularity"].mean()
-        df_explicit = ((df.groupby(['song_explicit']).count()/len(df))*100).reset_index()
+        # "track.album.name"
+        # "track.album.realease_date"
+        # "track.artists"
+        # "track.duration_ms"
+        # "track.explicit"
+        # "track.name"
+        # "track.popularity"
+
+        total_playlist_length_hours = round((df["track.duration_ms"].sum())/(1000),1) #DONE
+        distinct_artist_count = len(df['track.artists'].unique()) #DONE
+        total_songs = len(df["track.name"]) #DONE
+        avg_song_pop = df["track.popularity"].mean() #DONE
+        total_albums = len(df["track.album.name"].unique()) #DONE
+        df_explicit = ((df.groupby(['track.explicit']).count()/len(df))*100).reset_index()
         df_explicit = df_explicit.rename(columns={'added_to_playlist_time':'explicit_%'})
-        df_explicit['explicit_%'] = round(df_explicit['explicit_%'], 1)
-        explicitmetric = df_explicit.loc[: ,['explicit_%'] ]
+        df_explicit['explicit_%'] = round(df_explicit.loc[: ,'explicit_%'],1)
 
-        return (total_playlist_length_hours, distinct_artist_count, total_songs, explicitmetric, avg_song_pop)
+        return (total_playlist_length_hours, distinct_artist_count, total_songs, df_explicit['explicit_%'], avg_song_pop)
 
 
-    @st.cache_data
+    @st.cache_data(show_spinner=False)
     def get_top_user_tracks(limit, offset, length):
         data = sp.current_user_top_tracks(limit=limit, offset=offset, time_range=length)
         return data
 
 
-    @st.cache_data
+    @st.cache_data(show_spinner=False)
     def get_top_user_artists(limit, offset, length):
         data = sp.current_user_top_artists(limit=limit, offset=offset, time_range=length)
         return data
 
 
-    @st.cache_data
+    @st.cache_data(show_spinner=False)
     def get_user_playlists():
         results = sp.current_user_playlists(offset=0, limit=50)
         df= pd.json_normalize(results["items"],
@@ -281,7 +292,7 @@ if st.session_state["signed_in"]:
         return df
 
 
-    @st.cache_data
+    @st.cache_data(show_spinner=False)
     def playlist_selected_metrics(playlist_name_chosen):
         user_playlist_data = get_user_playlists()
         selected_playlist_data = user_playlist_data.loc[user_playlist_data["name"]==playlist_name_chosen]
@@ -290,7 +301,7 @@ if st.session_state["signed_in"]:
         return selected_playlist_data
 
 
-    @st.cache_data
+    @st.cache_data(show_spinner=False)
     def genre_metrics(given_dict):
         genre_sublists = given_dict.values()
         genre_list = [genre for sublist in genre_sublists for genre in sublist]
@@ -307,14 +318,14 @@ if st.session_state["signed_in"]:
         return top_5_dict
 
 
-    @st.cache_data
+    @st.cache_data(show_spinner=False)
     def genres_data(df):
         genre_list={i["name"]:i["genres"] for i in df['items']}
         return genre_list
 
 
-    @st.cache_data
-    def playlist_summary_metrics(data: pd.DataFrame):
+    @st.cache_data(show_spinner=False)
+    def playlist_contents_summary_metrics(data: pd.DataFrame):
         st.write("")
         st.write("")
         with st.container():
@@ -352,7 +363,7 @@ if st.session_state["signed_in"]:
             st.write("")
 
 
-    @st.cache_data
+    @st.cache_data(show_spinner=False)
     def get_top_50_artists(df):
         artist_info_dict = {}
         for i in df["items"]:
@@ -363,7 +374,7 @@ if st.session_state["signed_in"]:
         return artist_info_dict
 
 
-    @st.cache_data
+    @st.cache_data(show_spinner=False)
     def tab_formatting(artist_image: list, artist_name: list, artist_pop: list):
                 with st.container():
                     st.markdown("""<style>
@@ -404,7 +415,7 @@ if st.session_state["signed_in"]:
                                 st.write(" ")
                                 st.subheader(artist_pop[index])
 
-    @st.cache_data
+    @st.cache_data(show_spinner=False)
     def take(n, iterable):
         """Return the first n items of the iterable as a list."""
         return dict(islice(iterable.items(), n))                                
@@ -471,8 +482,102 @@ if st.session_state["signed_in"]:
 ######################################################################################################################################################
 
     with st.container():
-        playlist_summary_metrics(track_details_df)
+        with st.form("Playlist Form", clear_on_submit=False):
+            user_playlist_data = get_user_playlists()
+            col_playlist_dropdown, col_numeric_data_1, col_numeric_data_2 = st.columns(3)
+            list_playlists = user_playlist_data["name"].unique()
+            col_playlist_dropdown.selectbox('Select Playlist', list_playlists, key="playlist_name")
+            playlist_name_chosen = str(st.session_state["playlist_name"])
+            submitted = st.form_submit_button("Confirm Playlist")
 
+            if submitted:
+                playlist_results = playlist_selected_metrics(playlist_name_chosen)
+                playlist_id = playlist_results.iloc[0]["id"]
+                global_playlist_track_results = []
+                playlist_track_results = sp.playlist_items(playlist_id=str(playlist_id), limit=100, offset=0)
+                global_playlist_track_results.append(playlist_track_results)
+                # while offset <= 60 or playlist_track_results["next"] is not None:
+                for i in range(100,700+1,100):
+                    playlist_track_results = sp.playlist_items(playlist_id=str(playlist_id), limit=100, offset=i)
+                    global_playlist_track_results.append(playlist_track_results)
+
+                temp = []
+                for index, i in enumerate(global_playlist_track_results):
+                    df= pd.json_normalize(
+                        global_playlist_track_results[index]["items"]
+                        , record_path = ["track", ["artists"]]
+                        , meta=[
+                                ["track", "name"]
+                                , ["track", "explicit"]
+                                , ["added_at"]
+                                , ["track", "album", "name"]
+                                , ["track", "album", "total_tracks"]
+                                , ["track", "album", "id"]
+                                , ["track", "album", "release_date"]
+                                , ["track", "duration_ms"]
+                                , ["track", "popularity"]
+                                , ["track", "id"]
+                                ])
+
+                    temp.append(df)
+
+                finaldf = pd.concat(temp)
+                st.write(finaldf)
+
+                df2 = finaldf.groupby([
+                          'track.name'
+                          , 'track.id'
+                          , 'track.explicit'
+                          , 'added_at'
+                          , 'track.album.name'
+                          , 'track.album.total_tracks'
+                          , 'track.album.id'
+                          , 'track.album.release_date'
+                          , 'track.duration_ms'
+                          , 'track.popularity'
+                  ])['name'].apply(list).reset_index()
+
+                st.write(df2)
+
+
+
+
+
+
+
+
+                        # playlist_track_results = sp.playlist_items(playlist_id=str(playlist_id), limit=100, offset=i)
+                        # df= pd.json_normalize(playlist_track_results["items"])
+                        # df1 = df[["added_at", "track.album.artists","track.album.id","track.album.name","track.album.release_date","track.album.total_tracks","track.artists","track.duration_ms","track.explicit","track.name","track.popularity"]]
+                        # df2 = [*df1["track.artits"]]
+                        # print(df2)
+                # # playlist_id = playlist_results.iloc[0]["id"]
+                # # playlist_track_results = sp.playlist_items(playlist_id=str(playlist_id), limit=100, offset=0)
+                # # df= pd.json_normalize(playlist_track_results["items"])
+                # df1 = df[["added_at", "track.album.artists","track.album.id","track.album.name","track.album.release_date","track.album.total_tracks","track.artists","track.duration_ms","track.explicit","track.name","track.popularity"]]
+                # "track.album.artists","track.album.id","track.album.name","track.album.release_date","track.album.total_tracks","track.artists","track.duration_ms","track.explicit","track.name","track.popularity"
+                # st.write(df)
+                # st.write(playlist_track_results)
+                # for i in playlist_track_results["items"]:st.write(*i["track"]["artists"])
+                # ["added_at","track.album.artists","track.album.id","track.album.name","track.album.relaease_date","track.album.total_tracks","track.artists","track.duration_ms","track.explicit","track.name","track.popularity"]
+                # playlist_contents_summary_metrics(df)
+                # st.write(playlist_results[["name","description","tracks.total"]])
+                # def playlistchosenstats(playlist_name_chosen):
+                    # playlist_results = playlist_selected_metrics(playlist_name_chosen)
+                    # playlist_id = playlist_results.iloc[0]["id"]
+                    # while playlist_results["next"] != None or playlist_results["next"] < 600:
+                    #     for i in range(0,1000,100):
+                    #         playlist_track_results = sp.playlist_items(playlist_id=str(playlist_id), limit=100, offset=0)
+                    #         df= pd.json_normalize(playlist_track_results["items"])
+                    #         df1 = df[["added_at", "track.album.artists","track.album.id","track.album.name","track.album.release_date","track.album.total_tracks","track.artists","track.duration_ms","track.explicit","track.name","track.popularity"]]
+                    #         df2 = [*df1["track.artits"]]
+                    
+                    
+
+                
+    st.divider()
+    st.header("Artist Genre Breakouts")
+    st.subheader("The left chart represents..... the right chart represents")
 
     with st.container():
         fig = make_subplots(
@@ -501,8 +606,6 @@ if st.session_state["signed_in"]:
                             , yaxis_tickformat = '%'
                                 )
         st.plotly_chart(fig, use_container_width=True)
-        st.write("")
-
 
 
     tab1, tab2 = st.tabs(["Top Artists All Time","Artist You Can't Get Enough of"])
@@ -516,22 +619,6 @@ if st.session_state["signed_in"]:
         st.header("You have stuck with these artists throughout your listening journey")
         st.write("This tab takes a look at your total listening history and compares your most listened artist with the artsts you are listening to today. Any artists that appear in both get placed here!")
         tab_formatting(common_10_images, common_10_names, common_10_pop_rating)
-
-
-    with st.form("Playlist Form", clear_on_submit=False):
-        user_playlist_data = get_user_playlists()
-        col_playlist_dropdown, col_numeric_data_1, col_numeric_data_2 = st.columns(3)
-        list_playlists = user_playlist_data["name"].unique()
-        # datacols = user_playlist_data.loc[ :,:]
-        col_playlist_dropdown.selectbox('Select Playlist', list_playlists, key="playlist_name")
-        playlist_name_chosen = str(st.session_state["playlist_name"])
-        submitted = st.form_submit_button("Confirm Playlist")
-
-        if submitted:
-            playlist_results = playlist_selected_metrics(playlist_name_chosen)
-            playlist_id = playlist_results.iloc[0]["id"]
-            playlist_track_results = sp.playlist_items(playlist_id=str(playlist_id), limit=100, offset=0)
-            st.write(playlist_track_results)
 
 
         
