@@ -76,12 +76,9 @@ def app_sign_in():
 
 def app_display_welcome():
     # import secrets from streamlit deployment
-    # client_id = st.secrets["client_id"]
-    # client_secret = st.secrets["client_secret"]
-    # uri = st.secrets["uri"]
-    client_id = "1a03d057b2754e71a51fb53f7ea86a89"
-    uri = "http://localhost:8501/"
-    client_secret = "eea70d4ae1174b87a4b3994f43d97b72"
+    client_id = st.secrets["client_id"]
+    client_secret = st.secrets["client_secret"]
+    uri = st.secrets["uri"]
     # set scope and establish connection
     scopes = " ".join(["user-read-private",'user-library-read', 'user-top-read', 'playlist-read-private', 'playlist-read-collaborative'])
     # create oauth object
@@ -191,10 +188,10 @@ if st.session_state["signed_in"]:
             placeholer=st.empty()
             for index, i in enumerate(incs_50):
                 time.sleep(0.001)
-                my_bar.progress(i/500, text=progress_text)
+                # my_bar.progress(i/500, text=progress_text)
                 results = sp.current_user_saved_tracks(offset=i, limit=50)
                 full_list.append(results)
-                placeholer.text(f"{i/500}%")
+                # placeholer.text(f"{i/500}%")
             time.sleep(1)
             placeholer.empty()
             my_bar.empty()
@@ -386,9 +383,9 @@ if st.session_state["signed_in"]:
                         {text-align: center;
                         }     </style>""",unsafe_allow_html=True)
                     c1, c2, c3, c4, c5 = st.columns(5)
-                    c2.subheader("Artist Photo")
-                    c3.subheader("Artist Name")
-                    c4.subheader("Artist Popularity")
+                    # c2.subheader("Artist Photo")
+                    c3.subheader("Name")
+                    c4.subheader("Popularity")
                     for index, artist in enumerate(artist_image[:5]):
                         cs1, cs2, cs3, cs4, cs5 = st.columns(5)
                         with st.container():
@@ -482,6 +479,7 @@ if st.session_state["signed_in"]:
 ######################################################################################################################################################
 
     with st.container():
+        st.title("Select a playlist to learn more about it!")
         with st.form("Playlist Form", clear_on_submit=False):
             user_playlist_data = get_user_playlists()
             col_playlist_dropdown, col_numeric_data_1, col_numeric_data_2 = st.columns(3)
@@ -538,6 +536,18 @@ if st.session_state["signed_in"]:
                   ])['name'].apply(list).reset_index()
 
                 st.write(df2)
+
+                #TODO Metrics to have
+                # Last time a song was added
+                # Total songs
+                # Genre of the music
+                # Most frequent artist
+                #explicit %
+                # Total duration minutes
+                # different artists
+                # AVG Pop
+                # Favorite album
+
 
 
 
