@@ -11,8 +11,9 @@ import os
 from collections import Counter
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from itertools import islice
+from itertools import islice, chain
 from multiprocessing import Pool
+import datetime as dt
 
 
 ######################################################################################################################################################
@@ -26,10 +27,11 @@ col1, col2, col3 = st.columns(3)
 with col1:
     pass
 with col2:
-    st.title("Take a dive into your music listening metrics!")
+    st.title('Take a dive into your music listening metrics! 🎧')
+    st.write(" ")
+    st.write(" ")
 with col3 :
     pass
-
 
 def get_token(oauth, code):
     try:
@@ -97,7 +99,6 @@ def app_display_welcome():
                         "clicking the link below."]))
             st.write(" ".join(["If you do not have a spotify account please use the 'Example Dash' button to view what this dashboard would look like!"]))
             login_button = st.button('Login with Spotify', link_html, type="primary")
-            # login_button = st.link_button('Login with Spotify', link_html, type="primary")
             exampledashbutton = st.button('Example Dash', type="primary", key="example")
         with col3 : pass            
 
@@ -138,20 +139,6 @@ else:
     app_display_welcome()
 
 if st.session_state["signed_in"]:
-    # suc = st.success("Sign in success!")
-    # time.sleep(2)
-    # suc.empty()
-    # progress_text = "Operation in progress. Please wait."
-    # my_bar = st.progress(0, text=progress_text)
-    # placeholer = st.empty()
-
-    # for percent_complete in range(100):
-    #     time.sleep(0.01)
-    #     my_bar.progress(percent_complete + 1, text=progress_text)
-    #     placeholer.text(f"{int(percent_complete)}%")
-    # placeholer.empty()
-    # time.sleep(1)
-    # my_bar.empty()
 
     token = None
     if token == None:    
@@ -188,7 +175,7 @@ if st.session_state["signed_in"]:
             placeholer=st.empty()
             for index, i in enumerate(incs_50):
                 time.sleep(0.001)
-                # my_bar.progress(i/500, text=progress_text)
+                my_bar.progress(i/max(generate_chunks()), text=progress_text)
                 results = sp.current_user_saved_tracks(offset=i, limit=50)
                 full_list.append(results)
                 # placeholer.text(f"{i/500}%")
@@ -248,14 +235,6 @@ if st.session_state["signed_in"]:
     @st.cache_data(show_spinner=False)
     def summary_metrics(df: pd.DataFrame):
         """ Provides summary stats for user liked songs playlist"""
-        # "track.album.name"
-        # "track.album.realease_date"
-        # "track.artists"
-        # "track.duration_ms"
-        # "track.explicit"
-        # "track.name"
-        # "track.popularity"
-
         total_playlist_length_hours = round((df["track.duration_ms"].sum())/(1000),1) #DONE
         distinct_artist_count = len(df['track.artists'].unique()) #DONE
         total_songs = len(df["track.name"]) #DONE
@@ -321,6 +300,14 @@ if st.session_state["signed_in"]:
         return genre_list
 
 
+    def spacing_5():
+            st.write(" ")
+            st.write(" ")
+            st.write(" ")
+            st.write(" ")
+            st.write(" ")
+
+
     @st.cache_data(show_spinner=False)
     def playlist_contents_summary_metrics(data: pd.DataFrame):
         st.write("")
@@ -354,11 +341,7 @@ if st.session_state["signed_in"]:
             c5.subheader("Avg Song Popularity")
             c5.divider()
             c5.subheader(round(summary_metrics(data)[4]))
-            st.write("")
-            st.write("")
-            st.write("")
-            st.write("")
-
+            spacing_5()
 
     @st.cache_data(show_spinner=False)
     def get_top_50_artists(df):
@@ -398,18 +381,10 @@ if st.session_state["signed_in"]:
                             with cs2: 
                                 st.image(artist_image[index], width=220, )
                             with cs3:
-                                st.write(" ")
-                                st.write(" ")
-                                st.write(" ")
-                                st.write(" ")
-                                st.write(" ")
+                                spacing_5()
                                 st.subheader(artist_name[index])
                             with cs4:
-                                st.write(" ")
-                                st.write(" ")
-                                st.write(" ")
-                                st.write(" ")
-                                st.write(" ")
+                                spacing_5()
                                 st.subheader(artist_pop[index])
 
     @st.cache_data(show_spinner=False)
@@ -479,7 +454,7 @@ if st.session_state["signed_in"]:
 ######################################################################################################################################################
 
     with st.container():
-        st.title("Select a playlist to learn more about it!")
+        st.header("Select a playlist to learn more about it!")
         with st.form("Playlist Form", clear_on_submit=False):
             user_playlist_data = get_user_playlists()
             col_playlist_dropdown, col_numeric_data_1, col_numeric_data_2 = st.columns(3)
@@ -520,7 +495,7 @@ if st.session_state["signed_in"]:
                     temp.append(df)
 
                 finaldf = pd.concat(temp)
-                st.write(finaldf)
+                # st.write(finaldf)
 
                 df2 = finaldf.groupby([
                           'track.name'
@@ -535,19 +510,108 @@ if st.session_state["signed_in"]:
                           , 'track.popularity'
                   ])['name'].apply(list).reset_index()
 
-                st.write(df2)
+                # st.write(df2)
+                
+                def spacingformats():
+                    col1.write(" ")
+                    col1.write(" ")
+                    col1.write(" ")
+                    col2.write(" ")
+                    col2.write(" ")
+                    col2.write(" ")
+                    col3.write(" ")
+                    col3.write(" ")
+                    col3.write(" ")
+                    
+
+                st.header(f"Your '{playlist_name_chosen}' playlist details!")
+
+                with st.container(border=True):
+                    #TODO CENETER THE PLAYLIST NAME AT THE TOP OF THE PRESENTATION FOR THE CONTAINER
+                    
+                    #//* Row 1 of playlist metrics
+                    with st.container(border=False):
+
+                        #//* Created at date
+                        col1, col2, col3 = st.columns(3)
+                        col1.subheader("Playlist Created Date:")
+                        created_date = str(pd.to_datetime(min(df2['added_at'])).date())
+                        col1.subheader(created_date)
+
+                        #//* Avg days between songs added metric
+                        col2.subheader("Avg Days Between Added Songs:")
+                        df2 = df2.sort_values(by="added_at", ascending=True)
+                        df2["dates_offset"] = df2["added_at"].shift(-1).ffill()
+                        df2[["added_at", "dates_offset"]] = df2[["added_at", "dates_offset"]].apply(pd.to_datetime)
+                        df2["dates_diff"] =  (df2["dates_offset"] - df2["added_at"]).dt.days
+                        avg_days_diff = df2["dates_diff"].mean()
+                        col2.subheader(round(avg_days_diff, 4))
+                        
+                        #//* Total Songs in playlist metric
+                        col3.subheader("# Songs In Playlist:")
+                        col3.subheader(str(len(df2)))
+                        spacingformats()
+
+
+                    #//* Row 2 of playlist metrics 
+                    with st.container(border=False):
+
+                        col1, col2, col3 = st.columns(3)
+
+                        #//* Most frequent artist metric
+                        col3.subheader("Most Common Artist(s):")
+                        artist_list = list(chain(*df2['name']))
+                        artist_dict = Counter(artist_list)
+                        # artist_dict_sorted = sorted(artist_dict.items(), key=lambda x:x[1], reverse=True)
+                        maxval = max(artist_dict.values())
+                        top_artists = {k for k,v in artist_dict.items() if v==maxval}
+                        col3.subheader([i for i in top_artists])
+
+
+                        #//* avg song popularity metric
+                        col1.subheader("Avg Song Popularity:")
+                        avgpop = str(round(df2["track.popularity"].mean(),2))
+                        col1.subheader(f"{avgpop}")
+
+                        #//* Different artists mertic
+                        col2.subheader("# Different Artists:")
+                        distinctartists = str(len(set(list(chain(*df2['name'])))))
+                        col2.subheader(distinctartists)
+                        spacingformats()
+
+                    #//* Row 3 of playlist metrics 
+                    with st.container(border=False):
+
+                        col1, col2, col3 = st.columns(3)
+
+                        #//* perc explicit metric
+                        count_explicit = len(df2[df2["track.explicit"]==True])
+                        perc_explicit = round((count_explicit/len(df2))*100,2)
+                        col1.subheader("Explicit Song %:")
+                        col1.subheader(f"{perc_explicit}%")
+
+                        #//* Total duration of songs in minutes
+                        sum_song_len_minutes = (sum(pd.to_numeric(df2["track.duration_ms"]))/1000)/60
+                        col2.subheader("Total Duration (minutes):")
+                        col2.subheader(round(sum_song_len_minutes,2))
+
+                        #//* Total duration of songs in minutes
+                        sum_song_len_hours = (sum(pd.to_numeric(df2["track.duration_ms"]))/1000)/60/60
+                        col3.subheader("Total Duration (hours):")
+                        col3.subheader(round(sum_song_len_hours,2))
+
+
+
+
+
+
+
 
                 #TODO Metrics to have
-                # Last time a song was added
-                # Total songs
                 # Genre of the music
-                # Most frequent artist
-                #explicit %
                 # Total duration minutes
-                # different artists
-                # AVG Pop
                 # Favorite album
-
+                
 
 
 
