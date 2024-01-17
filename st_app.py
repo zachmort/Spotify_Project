@@ -28,6 +28,8 @@ with col1:
     pass
 with col2:
     st.title('Take a dive into your music listening metrics! 🎧')
+    st.write(" ")
+    st.write(" ")
 with col3 :
     pass
 
@@ -511,12 +513,18 @@ if st.session_state["signed_in"]:
                 # st.write(df2)
                 
                 def spacingformats():
-                    st.write(" ")
-                    st.write(" ")
-                    st.write(" ")
+                    col1.write(" ")
+                    col1.write(" ")
+                    col1.write(" ")
+                    col2.write(" ")
+                    col2.write(" ")
+                    col2.write(" ")
+                    col3.write(" ")
+                    col3.write(" ")
+                    col3.write(" ")
                     
 
-                st.header(f"Your {playlist_name_chosen} Playlist Details!")
+                st.header(f"Your '{playlist_name_chosen}' playlist details!")
 
                 with st.container(border=True):
                     #TODO CENETER THE PLAYLIST NAME AT THE TOP OF THE PRESENTATION FOR THE CONTAINER
@@ -524,14 +532,14 @@ if st.session_state["signed_in"]:
                     #//* Row 1 of playlist metrics
                     with st.container(border=False):
 
-                        ## Last added date metric
+                        #//* Created at date
                         col1, col2, col3 = st.columns(3)
-                        col1.subheader("Last date you added a song:")
-                        maxdate = str(pd.to_datetime(max(df2['added_at'])).date())
-                        col1.subheader(maxdate)
+                        col1.subheader("Playlist Created Date:")
+                        created_date = str(pd.to_datetime(min(df2['added_at'])).date())
+                        col1.subheader(created_date)
 
-                        ## Avg days between songs added metric
-                        col2.subheader("Avg days between added songs:")
+                        #//* Avg days between songs added metric
+                        col2.subheader("Avg Days Between Added Songs:")
                         df2 = df2.sort_values(by="added_at", ascending=True)
                         df2["dates_offset"] = df2["added_at"].shift(-1).ffill()
                         df2[["added_at", "dates_offset"]] = df2[["added_at", "dates_offset"]].apply(pd.to_datetime)
@@ -539,9 +547,10 @@ if st.session_state["signed_in"]:
                         avg_days_diff = df2["dates_diff"].mean()
                         col2.subheader(round(avg_days_diff, 4))
                         
-                        ## Songs in playlist metric
-                        col3.subheader("# Songs in the playlist:")
+                        #//* Total Songs in playlist metric
+                        col3.subheader("# Songs In Playlist:")
                         col3.subheader(str(len(df2)))
+                        spacingformats()
 
 
                     #//* Row 2 of playlist metrics 
@@ -549,8 +558,8 @@ if st.session_state["signed_in"]:
 
                         col1, col2, col3 = st.columns(3)
 
-                        ## Most frequnt artist metric
-                        col3.subheader("Most common artist:")
+                        #//* Most frequent artist metric
+                        col3.subheader("Most Common Artist(s):")
                         artist_list = list(chain(*df2['name']))
                         artist_dict = Counter(artist_list)
                         # artist_dict_sorted = sorted(artist_dict.items(), key=lambda x:x[1], reverse=True)
@@ -559,15 +568,16 @@ if st.session_state["signed_in"]:
                         col3.subheader([i for i in top_artists])
 
 
-                        #//* metric
+                        #//* avg song popularity metric
                         col1.subheader("Avg Song Popularity:")
                         avgpop = str(round(df2["track.popularity"].mean(),2))
-                        col1.subheader(avgpop)
+                        col1.subheader(f"{avgpop}")
 
                         #//* Different artists mertic
-                        col2.subheader("# Different artists:")
+                        col2.subheader("# Different Artists:")
                         distinctartists = str(len(set(list(chain(*df2['name'])))))
                         col2.subheader(distinctartists)
+                        spacingformats()
 
                     #//* Row 3 of playlist metrics 
                     with st.container(border=False):
@@ -577,14 +587,20 @@ if st.session_state["signed_in"]:
                         #//* perc explicit metric
                         count_explicit = len(df2[df2["track.explicit"]==True])
                         perc_explicit = round((count_explicit/len(df2))*100,2)
-                        col1.subheader("Explicit song %")
+                        col1.subheader("Explicit Song %:")
                         col1.subheader(f"{perc_explicit}%")
-
 
                         #//* Total duration of songs in minutes
                         sum_song_len_minutes = (sum(pd.to_numeric(df2["track.duration_ms"]))/1000)/60
-                        col2.subheader("Total duration minutes")
+                        col2.subheader("Total Duration (minutes):")
                         col2.subheader(round(sum_song_len_minutes,2))
+
+                        #//* Total duration of songs in minutes
+                        sum_song_len_hours = (sum(pd.to_numeric(df2["track.duration_ms"]))/1000)/60/60
+                        col3.subheader("Total Duration (hours):")
+                        col3.subheader(round(sum_song_len_hours,2))
+
+
 
 
 
