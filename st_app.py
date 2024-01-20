@@ -82,7 +82,7 @@ def app_display_welcome():
     client_secret = st.secrets["client_secret"]
     uri = st.secrets["uri"]
     # set scope and establish connection
-    scopes = " ".join(["user-read-private",'user-library-read', 'user-top-read', 'playlist-read-private', 'playlist-read-collaborative'])
+    scopes = " ".join(['user-read-private','user-library-read', 'user-top-read', 'playlist-read-collaborative'])
     # create oauth object
     oauth = SpotifyOAuth(scope=scopes,redirect_uri=uri,client_id=client_id,client_secret=client_secret)
     # store oauth in session
@@ -91,15 +91,14 @@ def app_display_welcome():
     auth_url = oauth.get_authorize_url()
     link_html = " <a target=\"_self\" href=\"{url}\" >{msg}</a> ".format(url=auth_url,msg="Click me to authenticate!")
     if not st.session_state["signed_in"]:
-    # st.markdown("<h1 style='text-align: center; color: red;'>Some title</h1>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns(3)
         with col1: pass
         with col2:
             st.write(" ".join(["No tokens found for this session. Please log in by",
                         "clicking the link below."]))
-            st.write(" ".join(["If you do not have a spotify account please use the 'Example Dash' button to view what this dashboard would look like!"]))
+            st.write(" ".join(["If you do not have a spotify account please use the 'Example Dash' button to view what this dashboard could look like!"]))
             login_button = st.button('Login with Spotify', link_html, type="primary")
-            exampledashbutton = st.button('Example Dash', type="primary", key="example")
+            exampledashbutton = st.button('Example Dash', type="primary")
         with col3 : pass            
 
         if login_button==True:
@@ -121,7 +120,7 @@ if "code" not in st.session_state:
 if "oauth" not in st.session_state:
     st.session_state["oauth"] = None
 
-url_params = st.experimental_get_query_params()
+url_params = st.query_params()
 
 # attempt sign in with cached token
 if st.session_state["cached_token"] != "":
@@ -140,7 +139,7 @@ else:
 
 if st.session_state["signed_in"]:
 
-    token = None
+    token = st.session_state["cached_token"]
     if token == None:    
         sp=spotipy.Spotify(st.session_state["cached_token"])
     else:
