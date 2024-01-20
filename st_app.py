@@ -36,14 +36,11 @@ def get_token(oauth, code):
         # return the token
         return token
     except Exception as notoken:
-        st.error("token not here?")
         st.write(notoken)
-
 
 def sign_in(token):
     sp = spotipy.Spotify(auth=token)
     return sp
-
 
 def app_get_token():
     try:
@@ -56,7 +53,6 @@ def app_get_token():
     else:
         st.session_state["cached_token"] = token
     return token
-        
 
 def app_sign_in():
     try:
@@ -69,9 +65,7 @@ def app_sign_in():
     else:
         st.session_state["signed_in"] = True
         app_display_welcome()
-
     return sp
-
 
 def app_display_welcome():
     # import secrets from streamlit deployment
@@ -111,16 +105,16 @@ def app_display_welcome():
 if "signed_in" not in st.session_state:
     st.session_state["signed_in"] = False
 if "cached_token" not in st.session_state:
-    st.session_state["cached_token"] = ""
+    st.session_state["cached_token"] = None
 if "code" not in st.session_state:
-    st.session_state["code"] = ""
+    st.session_state["code"] = None
 if "oauth" not in st.session_state:
     st.session_state["oauth"] = None
 
-url_params = st.query_params()
+url_params = st.query_params
 
 # attempt sign in with cached token
-if st.session_state["cached_token"] != "":
+if st.session_state["cached_token"] != None:
     sp = app_sign_in()
     # st.write("current state")
 # if no token, but code in url, get code, parse token, and sign in
@@ -135,7 +129,6 @@ else:
     app_display_welcome()
 
 if st.session_state["signed_in"]:
-
     token = st.session_state["cached_token"]
     if token == None:    
         sp=spotipy.Spotify(st.session_state["cached_token"])
@@ -145,7 +138,6 @@ if st.session_state["signed_in"]:
         current_user_id = user["id"]
         st.session_state["cached_current_user_id"] = current_user_id
         user_name = user["display_name"]
-        st.header(f"Hello! {user_name}")
 
 ######################################################################################################################################################
 ######################################################################################################################################################
