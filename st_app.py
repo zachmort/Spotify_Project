@@ -524,7 +524,7 @@ if st.session_state["signed_in"]:
                     col3.write(" ")
                     
 
-                st.header(f"Your '{playlist_name_chosen}' playlist details!")
+                st.header(f"'{playlist_name_chosen}' playlist details!")
 
                 with st.container(border=True):
                     #TODO CENETER THE PLAYLIST NAME AT THE TOP OF THE PRESENTATION FOR THE CONTAINER
@@ -598,65 +598,19 @@ if st.session_state["signed_in"]:
                         #//* Total duration of songs in minutes
                         sum_song_len_hours = (sum(pd.to_numeric(df2["track.duration_ms"]))/1000)/60/60
                         col3.subheader("Total Duration (hours):")
-                        col3.subheader(round(sum_song_len_hours,2))
-
-
-
-
-
-
-
-
-                #TODO Metrics to have
-                # Genre of the music
-                # Total duration minutes
-                # Favorite album
-                
-
-
-
-
-
-
-
-
-                        # playlist_track_results = sp.playlist_items(playlist_id=str(playlist_id), limit=100, offset=i)
-                        # df= pd.json_normalize(playlist_track_results["items"])
-                        # df1 = df[["added_at", "track.album.artists","track.album.id","track.album.name","track.album.release_date","track.album.total_tracks","track.artists","track.duration_ms","track.explicit","track.name","track.popularity"]]
-                        # df2 = [*df1["track.artits"]]
-                        # print(df2)
-                # # playlist_id = playlist_results.iloc[0]["id"]
-                # # playlist_track_results = sp.playlist_items(playlist_id=str(playlist_id), limit=100, offset=0)
-                # # df= pd.json_normalize(playlist_track_results["items"])
-                # df1 = df[["added_at", "track.album.artists","track.album.id","track.album.name","track.album.release_date","track.album.total_tracks","track.artists","track.duration_ms","track.explicit","track.name","track.popularity"]]
-                # "track.album.artists","track.album.id","track.album.name","track.album.release_date","track.album.total_tracks","track.artists","track.duration_ms","track.explicit","track.name","track.popularity"
-                # st.write(df)
-                # st.write(playlist_track_results)
-                # for i in playlist_track_results["items"]:st.write(*i["track"]["artists"])
-                # ["added_at","track.album.artists","track.album.id","track.album.name","track.album.relaease_date","track.album.total_tracks","track.artists","track.duration_ms","track.explicit","track.name","track.popularity"]
-                # playlist_contents_summary_metrics(df)
-                # st.write(playlist_results[["name","description","tracks.total"]])
-                # def playlistchosenstats(playlist_name_chosen):
-                    # playlist_results = playlist_selected_metrics(playlist_name_chosen)
-                    # playlist_id = playlist_results.iloc[0]["id"]
-                    # while playlist_results["next"] != None or playlist_results["next"] < 600:
-                    #     for i in range(0,1000,100):
-                    #         playlist_track_results = sp.playlist_items(playlist_id=str(playlist_id), limit=100, offset=0)
-                    #         df= pd.json_normalize(playlist_track_results["items"])
-                    #         df1 = df[["added_at", "track.album.artists","track.album.id","track.album.name","track.album.release_date","track.album.total_tracks","track.artists","track.duration_ms","track.explicit","track.name","track.popularity"]]
-                    #         df2 = [*df1["track.artits"]]
-                    
-                    
+                        col3.subheader(round(sum_song_len_hours,2))    
 
                 
     st.divider()
-    st.header("Artist Genre Breakouts")
-    st.subheader("The left chart represents..... the right chart represents")
+    st.header("Music Genre Breakouts")
+    col1,col2,col3 = st.columns(3)
+    # col1.markdown("<div style='text-align: center;' markdown='1'>Genre categories of the music you are listening to now</div>")
+    # col3.markdown("Genre categories of the music you used to listen to")
 
     with st.container():
         fig = make_subplots(
         cols = 2, rows = 1,column_widths = [1, 1],
-        subplot_titles = ("Short term Artist Genre Stats" ,"Long term Artist Genre Stats"),
+        subplot_titles = ("Recent Genre Breakout" ,"Historical  Genre Breakout"),
         specs = [[{'type': 'treemap', 'rowspan': 1}, {'type': 'treemap'}]])
 
         fig.add_trace(go.Treemap(
@@ -682,24 +636,20 @@ if st.session_state["signed_in"]:
         st.plotly_chart(fig, use_container_width=True)
 
 
-    tab1, tab2 = st.tabs(["Top Artists All Time","Artist You Can't Get Enough of"])
+    tab1, tab2 = st.tabs(["Your favorite artists now!","Artists you keep coming back to!"])
 
     with tab1:
         st.header("Artists you are rocking with right now")
-        st.write("This is a list of the artosts you are listning to most right now!")
+        st.write("This is a list of the artists you are listning to most right now!")
         tab_formatting(top10_artists_images, top10_artists_names, top10_artists_rating)
 
     with tab2:
-        st.header("You have stuck with these artists throughout your listening journey")
-        st.write("This tab takes a look at your total listening history and compares your most listened artist with the artsts you are listening to today. Any artists that appear in both get placed here!")
+        st.header("You have stayed loyal to these artists")
+        st.write("This list of artists represents artists you have listened to consistantly thruoghout your music journey!")
         tab_formatting(common_10_images, common_10_names, common_10_pop_rating)
 
 
-        
-
-
-
-
+        #//! Maybe add radar plot for the playlists metrics for aduio (valence, tempo ect)
 
 # ### Creating Artist Form for scatter plot data
 # st.write("## Artist Choser Form")
