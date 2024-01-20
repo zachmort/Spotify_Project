@@ -4,15 +4,12 @@ import plotly.express as px
 import plotly.graph_objects as go
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
-import numpy as np
 import time
 from streamlit.components.v1 import html
-import os
 from collections import Counter
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from itertools import islice, chain
-from multiprocessing import Pool
 import datetime as dt
 
 
